@@ -6,8 +6,13 @@ export default async function handler(req, res) {
 
   const body = req.body;
 
+  // Configuration-driven endpoint selection
+  const dyRegion = process.env.DY_REGION || 'US';
+  const dySectionId = process.env.DY_SECTION_ID || '8770123';
+  const baseUrl = dyRegion === 'EU' ? 'https://recs-search-eu.dynamicyield.com/search/' : 'https://recs-search.dynamicyield.com/search/';
+
   try {
-    const response = await fetch('https://recs-search.dynamicyield.com/search/8770123', {
+    const response = await fetch(`${baseUrl}${dySectionId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
