@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sinsay-red: #cc0000;
+  --color-glass-white: rgba(255, 255, 255, 0.8);
+  --color-glass-border: rgba(255, 255, 255, 0.2);
+}
+
+@layer base {
+  body {
+    @apply text-[#1a1a1a] font-sans antialiased;
+  }
+}
+
+.frosted-glass {
+  @apply bg-white/70 backdrop-blur-md border border-white/20;
+}
+
+.frosted-glass-dark {
+  @apply bg-black/70 backdrop-blur-md border border-white/10;
+}

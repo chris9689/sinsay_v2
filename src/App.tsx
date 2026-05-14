@@ -1,0 +1,349 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, SlidersHorizontal, ChevronDown, Heart, ShoppingBag, User, X } from 'lucide-react';
+import { useDYSearch } from './hooks/useDYSearch';
+import { useConfig } from './context/ConfigContext';
+import { ProductCard } from './components/ProductCard';
+import { ConfigPanel } from './components/ConfigPanel';
+import { motion, AnimatePresence } from 'framer-motion';
+import debounce from 'lodash/debounce';
+
+export default function App() {
+  const { config } = useConfig();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [offset, setOffset] = useState(0);
+  const [showConfig, setShowConfig] = useState(false);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState<any[]>([]);
+
+  // Debounce search input
+  const updateSearch = useCallback(
+    debounce((value: string) => {
+      setDebouncedSearch(value);
+      setOffset(0);
+    }, 500),
+    []
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    updateSearch(e.target.value);
+  };
+
+  // Keyboard shortcut: CMD/CTRL + SHIFT + K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'K') {
+        setShowConfig(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const { data, isLoading } = useDYSearch(debouncedSearch, offset, selectedFilters);
+
+  const toggleFilter = (field: string, value: string) => {
+    setSelectedFilters(prev => {
+      const existing = prev.find(f => f.field === field);
+      if (existing) {
+        const newValues = existing.values.includes(value)
+          ? existing.values.filter((v: string) => v !== value)
+          : [...existing.values, value];
+        
+        if (newValues.length === 0) {
+          return prev.filter(f => f.field !== field);
+        }
+        return prev.map(f => f.field === field ? { ...f, values: newValues } : f);
+      }
+      return [...prev, { field, values: [value] }];
+    });
+    setOffset(0);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#fcfcfc] transition-colors duration-500">
+      <AnimatePresence>
+        {showConfig && <ConfigPanel onClose={() => setShowConfig(false)} />}
+      </AnimatePresence>
+
+      {/* Sinsay Header with Frosted Glass */}
+      <header className="sticky top-0 z-50 frosted-glass shadow-sm">
+        <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between gap-8">
+          <div className="text-3xl font-black tracking-tighter uppercase cursor-pointer select-none">
+            Sinsay
+          </div>
+
+          <div className="flex-1 max-w-xl relative">
+            <input 
+              type="text"
+              value={searchTerm}
+              placeholder="Search for products..."
+              className="w-full bg-black/5 hover:bg-black/[0.08] focus:bg-white border-transparent focus:border-black rounded-sm py-2.5 px-11 text-sm transition-all outline-none"
+              onChange={handleSearchChange}
+            />
+            <Search className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-black transition-colors" size={18} />
+            {searchTerm && (
+              <button 
+                onClick={() => { setSearchTerm(''); updateSearch(''); }}
+                className="absolute right-3.5 top-3 text-gray-400 hover:text-black"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-7">
+            <div className="hidden md:flex items-center gap-6">
+              <User size={24} strokeWidth={1.5} className="cursor-pointer hover:scale-110 transition-transform" />
+              <div className="relative">
+                <Heart size={24} strokeWidth={1.5} className="cursor-pointer hover:scale-110 transition-transform" />
+                <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-bold h-4 w-4 rounded-full flex items-center justify-center">0</span>
+              </div>
+            </div>
+            <div className="relative">
+              <ShoppingBag size={24} strokeWidth={1.5} className="cursor-pointer hover:scale-110 transition-transform" />
+              <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] font-bold h-4 w-4 rounded-full flex items-center justify-center">0</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-[1440px] mx-auto px-6 py-10">
+        {/* Page Title and Sort - High Density Layout */}
+        <div className="flex flex-col md:flex-row justify-between items-baseline gap-4 mb-10">
+          <div>
+            <nav className="flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-widest mb-3">
+              <span className="hover:text-black cursor-pointer">Sinsay</span>
+              <span>/</span>
+              <span className="hover:text-black cursor-pointer">Women</span>
+              <span>/</span>
+              <span className="text-black font-bold">Search</span>
+            </nav>
+            <h1 className="text-3xl font-light uppercase tracking-tight flex items-center gap-4">
+              {debouncedSearch ? `Search Results: ${debouncedSearch}` : 'New Arrivals'}
+              <span className="text-sm text-gray-400 font-normal normal-case">
+                ({data?.totalNumResults || 0} items)
+              </span>
+            </h1>
+          </div>
+          
+          <div className="flex items-center gap-6 text-[11px] font-bold uppercase tracking-[0.15em] text-gray-400">
+            <span className="hidden sm:inline">Sort by:</span>
+            <div className="relative group cursor-pointer border-b border-transparent hover:border-black transition-all">
+              <button className="flex items-center gap-1.5 text-black py-1">
+                Recommended <ChevronDown size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-12">
+          {/* DY Dynamic Facets Sidebar */}
+          <aside className="hidden lg:block w-64 flex-shrink-0 space-y-10">
+            {isLoading ? (
+              Array(4).fill(0).map((_, i) => <SkeletonFilter key={i} />)
+            ) : (
+              data?.facets && Object.entries(data.facets).map(([title, options]) => (
+                <div key={title} className="border-t border-gray-100 pt-8 first:border-t-0 first:pt-0">
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest mb-5 flex justify-between items-center group cursor-pointer">
+                    {title}
+                    <ChevronDown size={14} className="group-hover:translate-y-0.5 transition-transform" />
+                  </h4>
+                  <div className="space-y-3.5 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
+                    {options.map((opt) => (
+                      <label 
+                        key={opt.value} 
+                        className="flex items-center gap-3.5 text-[13px] text-gray-600 hover:text-black cursor-pointer group transition-colors"
+                      >
+                        <div className="relative flex items-center justify-center">
+                          <input 
+                            type="checkbox" 
+                            className="peer h-4 w-4 border-gray-200 rounded-none checked:bg-black checked:border-black transition-all appearance-none border" 
+                            checked={selectedFilters.some(f => f.field === title && f.values.includes(opt.value))}
+                            onChange={() => toggleFilter(title, opt.value)}
+                          />
+                          <div className="absolute opacity-0 peer-checked:opacity-100 pointer-events-none text-white transition-opacity">
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        </div>
+                        <span className="group-hover:translate-x-0.5 transition-transform">{opt.value}</span>
+                        <span className="ml-auto text-[10px] text-gray-300 font-medium">({opt.count})</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </aside>
+
+          {/* Product Grid - 4 Columns Responsive */}
+          <div className="flex-1">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-12">
+              {isLoading ? (
+                Array(12).fill(0).map((_, i) => <SkeletonCard key={i} />)
+              ) : (
+                data?.slots?.filter(slot => slot && slot.item).map((slot, idx) => (
+                  <ProductCard 
+                    key={`${slot.strId || idx}-${idx}`} 
+                    item={slot.item} 
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Empty State */}
+            {!isLoading && (!data?.slots || data.slots.length === 0) && (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                {(() => {
+                  console.warn('Rendering: Zero results produced. Raw data:', data);
+                  return null;
+                })()}
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                  <Search size={32} className="text-gray-300" />
+                </div>
+                <h3 className="text-xl font-bold uppercase tracking-tight mb-2">No products found</h3>
+                <p className="text-gray-400 max-w-sm text-sm">
+                  We couldn't find anything matching your search. Try different keywords or adjust your filters.
+                </p>
+                <button 
+                  onClick={() => { setSearchTerm(''); updateSearch(''); setSelectedFilters([]); }}
+                  className="mt-8 px-8 py-3 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {data && data.totalNumResults > 0 && (
+              <div className="mt-20 flex justify-center items-center gap-4">
+                <button 
+                  disabled={offset === 0}
+                  onClick={() => setOffset(Math.max(0, offset - config.itemsPerPage))}
+                  className="px-6 py-2 border border-gray-200 text-[11px] font-bold uppercase tracking-widest hover:border-black disabled:opacity-30 disabled:hover:border-gray-200 transition-all"
+                >
+                  Previous
+                </button>
+                <span className="text-[11px] font-bold text-gray-400">
+                  Page {Math.floor(offset / config.itemsPerPage) + 1} / {Math.ceil(data.totalNumResults / config.itemsPerPage)}
+                </span>
+                <button 
+                  disabled={offset + config.itemsPerPage >= data.totalNumResults}
+                  onClick={() => setOffset(offset + config.itemsPerPage)}
+                  className="px-6 py-2 border border-gray-200 text-[11px] font-bold uppercase tracking-widest hover:border-black disabled:opacity-30 disabled:hover:border-gray-200 transition-all"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Mobile Filter Sticky Toggle */}
+      <div className="lg:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+        <button 
+          onClick={() => setIsMobileFilterOpen(true)}
+          className="flex items-center gap-3 bg-black text-white px-10 py-4 rounded-full text-xs font-bold uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
+        >
+          <SlidersHorizontal size={18} /> Filter & Sort
+        </button>
+      </div>
+
+      {/* Mobile Filter Drawer */}
+      <AnimatePresence>
+        {isMobileFilterOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-[60] backdrop-blur-sm"
+              onClick={() => setIsMobileFilterOpen(false)}
+            />
+            <motion.div 
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed inset-y-0 right-0 w-full max-w-sm bg-white z-[70] p-6 shadow-2xl flex flex-col"
+            >
+              <div className="flex justify-between items-center mb-8 pb-4 border-b">
+                <h2 className="text-lg font-bold uppercase tracking-tight">Filters</h2>
+                <button onClick={() => setIsMobileFilterOpen(false)} className="p-2"><X /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto space-y-8 pr-2">
+                {data?.facets && Object.entries(data.facets).map(([title, options]) => (
+                  <div key={title}>
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest mb-5">{title}</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      {options.map((opt) => (
+                        <button 
+                          key={opt.value} 
+                          onClick={() => toggleFilter(title, opt.value)}
+                          className={`text-left px-4 py-3 text-[11px] font-bold uppercase tracking-widest border transition-all ${
+                            selectedFilters.some(f => f.field === title && f.values.includes(opt.value))
+                              ? 'bg-black text-white border-black'
+                              : 'bg-white text-gray-600 border-gray-100'
+                          }`}
+                        >
+                          {opt.value}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button 
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="mt-6 w-full bg-black text-white py-4 font-bold uppercase text-xs tracking-widest"
+              >
+                Show Results
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Shortcut Hint Overlay */}
+      <div className="fixed bottom-4 left-4 bg-black/80 text-[10px] text-white/60 px-4 py-2 rounded-full backdrop-blur-md flex items-center gap-3 pointer-events-none z-40 select-none border border-white/5">
+        <div className="flex gap-1">
+          <span className="bg-white/20 px-1.5 py-0.5 rounded text-white font-bold">CTRL</span>
+          <span className="text-white/40">+</span>
+          <span className="bg-white/20 px-1.5 py-0.5 rounded text-white font-bold">SHIFT</span>
+          <span className="text-white/40">+</span>
+          <span className="bg-white/20 px-1.5 py-0.5 rounded text-white font-bold">K</span>
+        </div>
+        <span className="opacity-80">to configure Dynamic Yield API</span>
+      </div>
+    </div>
+  );
+}
+
+// --- Skeleton Components ---
+
+const SkeletonCard = () => (
+  <div className="animate-pulse">
+    <div className="aspect-[3/4] bg-gray-100 rounded-sm mb-4" />
+    <div className="h-2 bg-gray-100 w-1/4 rounded-full mb-2" />
+    <div className="h-3.5 bg-gray-100 w-3/4 rounded-full mb-3" />
+    <div className="h-4 bg-gray-100 w-1/2 rounded-full" />
+  </div>
+);
+
+const SkeletonFilter = () => (
+  <div className="animate-pulse">
+    <div className="h-3 bg-gray-100 w-1/2 rounded-full mb-6" />
+    <div className="space-y-4">
+      {Array(4).fill(0).map((_, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <div className="w-4 h-4 bg-gray-100 rounded-none" />
+          <div className="h-2.5 bg-gray-100 w-2/3 rounded-full" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
