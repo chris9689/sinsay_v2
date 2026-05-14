@@ -82,7 +82,9 @@ export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
                 <ConfigField label="Section ID" value={localConfig.sectionId} onChange={(v: string) => updateField('sectionId', v)} />
                 <ConfigField label="Feed ID" value={localConfig.feedId} onChange={(v: string) => updateField('feedId', v)} />
                 <ConfigField label="Widget ID" value={localConfig.widgetId} onChange={(v: string) => updateField('widgetId', v)} />
-                <ConfigField label="Endpoint URL" value={localConfig.endpoint} onChange={(v: string) => updateField('endpoint', v)} className="col-span-2" />
+                <div className="col-span-2 mt-4">
+                  <Toggle label="Use EU Endpoint" checked={localConfig.region === 'EU'} onChange={(v: boolean) => updateField('region', v ? 'EU' : 'US')} />
+                </div>
               </div>
             </section>
 

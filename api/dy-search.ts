@@ -4,11 +4,11 @@ export default async function handler(req, res) {
     return;
   }
 
-  const body = req.body;
+  const { region, sectionId, ...dyPayload } = req.body;
 
   // Configuration-driven endpoint selection
-  const dyRegion = process.env.DY_REGION || 'US';
-  const dySectionId = process.env.DY_SECTION_ID || '8770123';
+  const dyRegion = region || 'US';
+  const dySectionId = sectionId || '8770123';
   const baseUrl = dyRegion === 'EU' ? 'https://recs-search-eu.dynamicyield.com/search/' : 'https://recs-search.dynamicyield.com/search/';
 
   try {
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(dyPayload),
     });
 
     const data = await response.json();

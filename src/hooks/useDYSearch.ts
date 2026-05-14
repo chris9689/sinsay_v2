@@ -24,7 +24,7 @@ export const useDYSearch = (query: string, offset: number, filters: any[] = []) 
   const { config, setLastRequestPayload } = useConfig();
 
   return useQuery({
-    queryKey: ['dySearch', query, offset, filters, config.sectionId, config.feedId, config],
+    queryKey: ['dySearch', query, offset, filters, config.sectionId, config.feedId, config.region, config],
     queryFn: async (): Promise<DYSearchResponse> => {
       // If we don't have IDs, return early (though Query will be disabled)
       if (!config.sectionId || !config.feedId) {
@@ -34,6 +34,8 @@ export const useDYSearch = (query: string, offset: number, filters: any[] = []) 
       const fId = isNaN(Number(config.feedId)) ? config.feedId : Number(config.feedId);
 
       const payload = {
+        region: config.region,
+        sectionId: config.sectionId,
         data: [
           {
             fId: fId,
@@ -83,7 +85,7 @@ export const useDYSearch = (query: string, offset: number, filters: any[] = []) 
 
       setLastRequestPayload(payload);
 
-      const response = await fetch(config.endpoint || '/api/dy-search', {
+      const response = await fetch('/api/dy-search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

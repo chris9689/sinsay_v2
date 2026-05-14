@@ -4,7 +4,7 @@ export interface DYConfig {
   sectionId: string;
   feedId: string;
   widgetId: string;
-  endpoint: string;
+  region: 'US' | 'EU';
   locale: string;
   language: string;
   ctxType: string;
@@ -40,7 +40,7 @@ const defaultConfig: DYConfig = {
   sectionId: '8770123',
   feedId: '85470',
   widgetId: '12345',
-  endpoint: '/api/dy-search',
+  region: 'US',
   locale: 'en_US',
   language: 'en_US',
   ctxType: 'HOMEPAGE',
@@ -85,7 +85,9 @@ export const ConfigProvider = ({ children }: { children: React.ReactNode }) => {
     const saved = localStorage.getItem('dy_sinsay_config');
     try {
       const parsed = saved ? JSON.parse(saved) : defaultConfig;
-      return { ...parsed, endpoint: '/api/dy-search' };
+      // Remove deprecated endpoint and ensure region
+      const { endpoint, ...cleanConfig } = parsed;
+      return { ...cleanConfig, region: cleanConfig.region || 'US' };
     } catch (e) {
       return defaultConfig;
     }
