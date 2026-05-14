@@ -83,8 +83,7 @@ export const useDYSearch = (query: string, offset: number, filters: any[] = []) 
 
       setLastRequestPayload(payload);
 
-      const endpoint = config.endpoint.endsWith('/') ? config.endpoint : config.endpoint + '/';
-      const response = await fetch(`${endpoint}${config.sectionId}`, {
+      const response = await fetch(config.endpoint || '/api/dy-search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -40,7 +40,7 @@ const defaultConfig: DYConfig = {
   sectionId: '8770123',
   feedId: '85470',
   widgetId: '12345',
-  endpoint: 'https://recs-search.dynamicyield.com/search',
+  endpoint: '/api/dy-search',
   locale: 'en_US',
   language: 'en_US',
   ctxType: 'HOMEPAGE',
@@ -84,7 +84,8 @@ export const ConfigProvider = ({ children }: { children: React.ReactNode }) => {
   const [config, setConfig] = useState<DYConfig>(() => {
     const saved = localStorage.getItem('dy_sinsay_config');
     try {
-      return saved ? JSON.parse(saved) : defaultConfig;
+      const parsed = saved ? JSON.parse(saved) : defaultConfig;
+      return { ...parsed, endpoint: '/api/dy-search' };
     } catch (e) {
       return defaultConfig;
     }
