@@ -15,6 +15,7 @@ export default function App() {
   const [showConfig, setShowConfig] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<any[]>([]);
+  const [logoError, setLogoError] = useState(false);
 
   // Debounce search input
   const updateSearch = useCallback(
