@@ -86,7 +86,7 @@ export default function App() {
               type="text"
               value={searchTerm}
               placeholder="Search for products..."
-              className="w-full bg-black/5 hover:bg-black/[0.08] focus:bg-white border-transparent focus:border-black rounded-sm py-2.5 px-11 text-sm transition-all outline-none"
+              className="w-full bg-black/5 hover:bg-black/8 focus:bg-white border-transparent focus:border-black rounded-sm py-2.5 px-11 text-sm transition-all outline-none"
               onChange={handleSearchChange}
             />
             <Search className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-black transition-colors" size={18} />
@@ -273,7 +273,7 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-[60] backdrop-blur-sm"
+              className="fixed inset-0 bg-black/50 z-60 backdrop-blur-sm"
               onClick={() => setIsMobileFilterOpen(false)}
             />
             <motion.div 
@@ -281,7 +281,7 @@ export default function App() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed inset-y-0 right-0 w-full max-w-sm bg-white z-[70] p-6 shadow-2xl flex flex-col"
+              className="fixed inset-y-0 right-0 w-full max-w-sm bg-white z-70 p-6 shadow-2xl flex flex-col"
             >
               <div className="flex justify-between items-center mb-8 pb-4 border-b">
                 <h2 className="text-lg font-bold uppercase tracking-tight">Filters</h2>
@@ -317,7 +317,6 @@ export default function App() {
                   </div>
                 ))}
               </div>
-              </div>
               <button 
                 onClick={() => setIsMobileFilterOpen(false)}
                 className="mt-6 w-full bg-black text-white py-4 font-bold uppercase text-xs tracking-widest"
@@ -333,7 +332,7 @@ export default function App() {
       <div className="fixed bottom-4 left-4 bg-black/80 text-[10px] text-white/60 px-4 py-2 rounded-full backdrop-blur-md flex items-center gap-3 pointer-events-none z-40 select-none border border-white/5">
         <div className="flex gap-1">
           <span className="bg-white/20 px-1.5 py-0.5 rounded text-white font-bold">CTRL</span>
-          <span className="text-white/40">+</span>
+          <aside className="hidden lg:block w-64 shrink-0 space-y-10">
           <span className="bg-white/20 px-1.5 py-0.5 rounded text-white font-bold">SHIFT</span>
           <span className="text-white/40">+</span>
           <span className="bg-white/20 px-1.5 py-0.5 rounded text-white font-bold">K</span>
@@ -348,7 +347,7 @@ export default function App() {
 
 const SkeletonCard = () => (
   <div className="animate-pulse">
-    <div className="aspect-[3/4] bg-gray-100 rounded-sm mb-4" />
+    <div className="aspect-3/4 bg-gray-100 rounded-sm mb-4" />
     <div className="h-2 bg-gray-100 w-1/4 rounded-full mb-2" />
     <div className="h-3.5 bg-gray-100 w-3/4 rounded-full mb-3" />
     <div className="h-4 bg-gray-100 w-1/2 rounded-full" />

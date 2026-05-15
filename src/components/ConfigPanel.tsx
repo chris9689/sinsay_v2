@@ -32,7 +32,7 @@ export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex justify-end">
+    <div className="fixed inset-0 z-100 flex justify-end">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -173,7 +173,7 @@ export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
             <div className="sticky bottom-0 bg-[#0f0f0f] pt-6 pb-2 border-t border-gray-800 flex flex-col gap-3">
               <button 
                 onClick={handleSave}
-                className="w-full bg-[#cc0000] hover:bg-[#b00000] text-white font-bold py-4 rounded uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                className="w-full bg-sinsay-red hover:bg-[#b00000] text-white font-bold py-4 rounded uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95"
               >
                 <Save size={18} /> Update API Session
               </button>

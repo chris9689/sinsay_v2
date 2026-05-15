@@ -24,7 +24,7 @@ export const ProductCard = ({ item }: { item: any }) => {
       onClick={() => productUrl !== '#' && window.open(productUrl, '_blank')}
     >
       {/* Image Container with Frosted Glass Overlay */}
-      <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
+      <div className="relative aspect-3/4 bg-gray-100 overflow-hidden">
         {imageUrl ? (
           <img 
             src={isHovered ? (secondaryImageUrl || imageUrl) : imageUrl} 
