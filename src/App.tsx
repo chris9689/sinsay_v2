@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Search, SlidersHorizontal, ChevronDown, Heart, ShoppingBag, User, X } from 'lucide-react';
 import { useDYSearch } from './hooks/useDYSearch';
 import { useConfig } from './context/ConfigContext';
-import { extractDyItems } from './utils/dyResponseAdapter';
+import { extractDyPayload } from './utils/dyResponseAdapter';
 import { ProductCard } from './components/ProductCard';
 import { ConfigPanel } from './components/ConfigPanel';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,7 +44,7 @@ export default function App() {
   }, []);
 
   const { data, isLoading } = useDYSearch(debouncedSearch, offset, selectedFilters);
-  const items: any[] = extractDyItems(data);
+  const { items, facets, totalNumResults } = extractDyPayload(data);
 
   const toggleFilter = (field: string, value: string) => {
     setSelectedFilters(prev => {
@@ -130,7 +130,7 @@ export default function App() {
             <h1 className="text-3xl font-light uppercase tracking-tight flex items-center gap-4">
               {debouncedSearch ? `Search Results: ${debouncedSearch}` : 'New Arrivals'}
               <span className="text-sm text-gray-400 font-normal normal-case">
-                ({data?.totalNumResults || 0} items)
+                ({totalNumResults || 0} items)
               </span>
             </h1>
           </div>
@@ -147,39 +147,47 @@ export default function App() {
 
         <div className="flex gap-12">
           {/* DY Dynamic Facets Sidebar */}
-          <aside className="hidden lg:block w-64 flex-shrink-0 space-y-10">
+          <aside className="hidden lg:block w-64 shrink-0 space-y-10">
             {isLoading ? (
               Array(4).fill(0).map((_, i) => <SkeletonFilter key={i} />)
             ) : (
-              data?.facets && Object.entries(data.facets).map(([title, options]) => (
-                <div key={title} className="border-t border-gray-100 pt-8 first:border-t-0 first:pt-0">
+              facets.map((facet) => (
+                <div key={facet.key} className="border-t border-gray-100 pt-8 first:border-t-0 first:pt-0">
                   <h4 className="text-[11px] font-bold uppercase tracking-widest mb-5 flex justify-between items-center group cursor-pointer">
-                    {title}
+                    {facet.title}
                     <ChevronDown size={14} className="group-hover:translate-y-0.5 transition-transform" />
                   </h4>
                   <div className="space-y-3.5 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
-                    {options.map((opt) => (
-                      <label 
-                        key={opt.value} 
-                        className="flex items-center gap-3.5 text-[13px] text-gray-600 hover:text-black cursor-pointer group transition-colors"
-                      >
-                        <div className="relative flex items-center justify-center">
-                          <input 
-                            type="checkbox" 
-                            className="peer h-4 w-4 border-gray-200 rounded-none checked:bg-black checked:border-black transition-all appearance-none border" 
-                            checked={selectedFilters.some(f => f.field === title && f.values.includes(opt.value))}
-                            onChange={() => toggleFilter(title, opt.value)}
-                          />
-                          <div className="absolute opacity-0 peer-checked:opacity-100 pointer-events-none text-white transition-opacity">
-                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
+                    {facet.options && facet.options.length > 0 ? (
+                      facet.options.map((opt) => (
+                        <label 
+                          key={opt.value} 
+                          className="flex items-center gap-3.5 text-[13px] text-gray-600 hover:text-black cursor-pointer group transition-colors"
+                        >
+                          <div className="relative flex items-center justify-center">
+                            <input 
+                              type="checkbox" 
+                              className="peer h-4 w-4 border-gray-200 rounded-none checked:bg-black checked:border-black transition-all appearance-none border" 
+                              checked={selectedFilters.some(f => f.field === facet.key && f.values.includes(opt.value))}
+                              onChange={() => toggleFilter(facet.key, opt.value)}
+                            />
+                            <div className="absolute opacity-0 peer-checked:opacity-100 pointer-events-none text-white transition-opacity">
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
                           </div>
-                        </div>
-                        <span className="group-hover:translate-x-0.5 transition-transform">{opt.value}</span>
-                        <span className="ml-auto text-[10px] text-gray-300 font-medium">({opt.count})</span>
-                      </label>
-                    ))}
+                          <span className="group-hover:translate-x-0.5 transition-transform">{opt.value}</span>
+                          <span className="ml-auto text-[10px] text-gray-300 font-medium">{opt.count != null ? `(${opt.count})` : ''}</span>
+                        </label>
+                      ))
+                    ) : facet.type === 'number' ? (
+                      <div className="text-[11px] text-gray-500 uppercase tracking-[0.2em]">
+                        {facet.min != null || facet.max != null ? `${facet.min ?? '-'} – ${facet.max ?? '-'}` : 'No values available'}
+                      </div>
+                    ) : (
+                      <div className="text-[11px] text-gray-500 uppercase tracking-[0.2em]">No options available</div>
+                    )}
                   </div>
                 </div>
               ))
@@ -194,7 +202,7 @@ export default function App() {
               ) : (
                 items.map((item, idx) => (
                   <ProductCard 
-                    key={`${item?.sku || item?.id || idx}-${idx}`} 
+                    key={`${(item as any)?.sku ?? (item as any)?.id ?? (item as any)?.group_id ?? String(idx)}-${idx}`} 
                     item={item} 
                   />
                 ))
@@ -222,7 +230,7 @@ export default function App() {
                 </div>
               );
             })()}
-            {!isLoading && data && typeof data.totalNumResults === 'number' && data.totalNumResults > 0 && (
+            {!isLoading && totalNumResults > 0 && (
               <div className="mt-20 flex justify-center items-center gap-4">
                 <button 
                   disabled={offset === 0}
@@ -232,10 +240,10 @@ export default function App() {
                   Previous
                 </button>
                 <span className="text-[11px] font-bold text-gray-400">
-                  Page {Math.floor(offset / config.itemsPerPage) + 1} / {Math.ceil(data.totalNumResults / config.itemsPerPage)}
+                  Page {Math.floor(offset / config.itemsPerPage) + 1} / {Math.ceil(totalNumResults / config.itemsPerPage)}
                 </span>
                 <button 
-                  disabled={offset + config.itemsPerPage >= data.totalNumResults}
+                  disabled={offset + config.itemsPerPage >= totalNumResults}
                   onClick={() => setOffset(offset + config.itemsPerPage)}
                   className="px-6 py-2 border border-gray-200 text-[11px] font-bold uppercase tracking-widest hover:border-black disabled:opacity-30 disabled:hover:border-gray-200 transition-all"
                 >
@@ -280,26 +288,35 @@ export default function App() {
                 <button onClick={() => setIsMobileFilterOpen(false)} className="p-2"><X /></button>
               </div>
               <div className="flex-1 overflow-y-auto space-y-8 pr-2">
-                {data?.facets && Object.entries(data.facets).map(([title, options]) => (
-                  <div key={title}>
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest mb-5">{title}</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      {options.map((opt) => (
-                        <button 
-                          key={opt.value} 
-                          onClick={() => toggleFilter(title, opt.value)}
-                          className={`text-left px-4 py-3 text-[11px] font-bold uppercase tracking-widest border transition-all ${
-                            selectedFilters.some(f => f.field === title && f.values.includes(opt.value))
-                              ? 'bg-black text-white border-black'
-                              : 'bg-white text-gray-600 border-gray-100'
-                          }`}
-                        >
-                          {opt.value}
-                        </button>
-                      ))}
-                    </div>
+                {facets.map((facet) => (
+                  <div key={facet.key}>
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest mb-5">{facet.title}</h4>
+                    {facet.options && facet.options.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        {facet.options.map((opt) => (
+                          <button 
+                            key={opt.value} 
+                            onClick={() => toggleFilter(facet.key, opt.value)}
+                            className={`text-left px-4 py-3 text-[11px] font-bold uppercase tracking-widest border transition-all ${
+                              selectedFilters.some(f => f.field === facet.key && f.values.includes(opt.value))
+                                ? 'bg-black text-white border-black'
+                                : 'bg-white text-gray-600 border-gray-100'
+                            }`}
+                          >
+                            {opt.value}
+                          </button>
+                        ))}
+                      </div>
+                    ) : facet.type === 'number' ? (
+                      <div className="text-[11px] text-gray-500 uppercase tracking-[0.2em]">
+                        {facet.min != null || facet.max != null ? `${facet.min ?? '-'} – ${facet.max ?? '-'}` : 'No values available'}
+                      </div>
+                    ) : (
+                      <div className="text-[11px] text-gray-500 uppercase tracking-[0.2em]">No options available</div>
+                    )}
                   </div>
                 ))}
+              </div>
               </div>
               <button 
                 onClick={() => setIsMobileFilterOpen(false)}
