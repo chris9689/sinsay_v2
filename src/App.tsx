@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Search, SlidersHorizontal, ChevronDown, Heart, ShoppingBag, User, X } from 'lucide-react';
 import { useDYSearch } from './hooks/useDYSearch';
 import { useConfig } from './context/ConfigContext';
+import { extractDyItems } from './utils/dyResponseAdapter';
 import { ProductCard } from './components/ProductCard';
 import { ConfigPanel } from './components/ConfigPanel';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,6 +44,7 @@ export default function App() {
   }, []);
 
   const { data, isLoading } = useDYSearch(debouncedSearch, offset, selectedFilters);
+  const items = extractDyItems(data);
 
   const toggleFilter = (field: string, value: string) => {
     setSelectedFilters(prev => {
@@ -190,57 +192,36 @@ export default function App() {
               {isLoading ? (
                 Array(12).fill(0).map((_, i) => <SkeletonCard key={i} />)
               ) : (
-                (() => {
-                  try {
-                    // Safe data extraction with comprehensive null checks
-                    const slots = data?.slots ?? [];
-                    
-                    if (!Array.isArray(slots)) {
-                      console.warn('Slots is not an array:', slots);
-                      return null;
-                    }
-
-                    const validSlots = slots.filter(slot => {
-                      if (!slot || typeof slot !== 'object') return false;
-                      if (!slot.item || typeof slot.item !== 'object') return false;
-                      return true;
-                    });
-
-                    if (validSlots.length === 0) {
-                      return null; // Let empty state handle this
-                    }
-
-                    return validSlots.map((slot, idx) => (
-                      <ProductCard 
-                        key={`${slot.strId || idx}-${idx}`} 
-                        item={slot.item} 
-                      />
-                    ));
-                  } catch (e) {
-                    console.error('Error rendering product cards:', e, { data });
-                    return null;
-                  }
-                })()
+                items.map((item, idx) => (
+                  <ProductCard 
+                    key={`${item?.sku || item?.id || idx}-${idx}`} 
+                    item={item} 
+                  />
+                ))
               )}
             </div>
 
             {/* Empty State */}
-            {!isLoading && (() => {
-              const slots = data?.slots ?? [];
-              const isEmpty = !Array.isArray(slots) || slots.length === 0;
-              return isEmpty ? (
+            {!isLoading && items.length === 0 && (() => {
+              console.warn('Rendering: Zero valid items extracted', { data });
+              return (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                  {(() => {
-                    console.warn('No results - data structure:', { 
-                      hasData: !!data,
-                      hasSlots: !!data?.slots,
-                      slotsIsArray: Array.isArray(data?.slots),
-                      slotsLength: (data?.slots ?? []).length,
-                      totalNumResults: data?.totalNumResults,
-                      rawData: data
-                    });
-                    return null;
-                  })()}
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                    <Search size={32} className="text-gray-300" />
+                  </div>
+                  <h3 className="text-xl font-bold uppercase tracking-tight mb-2">No products found</h3>
+                  <p className="text-gray-400 max-w-sm text-sm">
+                    We couldn't find anything matching your search. Try different keywords or adjust your filters.
+                  </p>
+                  <button 
+                    onClick={() => { setSearchTerm(''); updateSearch(''); setSelectedFilters([]); }}
+                    className="mt-8 px-8 py-3 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
+              );
+            })()}
                   <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
                     <Search size={32} className="text-gray-300" />
                   </div>
