@@ -33,38 +33,51 @@ export const useDYSearch = (query: string, offset: number, filters: any[] = []) 
 
       const fId = isNaN(Number(config.feedId)) ? config.feedId : Number(config.feedId);
 
+      // Build search object with optional parameters
+      const searchObj: any = {
+        text: query || "*",
+        pagination: {
+          numItems: config.itemsPerPage,
+          offset: offset,
+        },
+        suggestMode: config.suggestMode,
+        explain_mode: config.explainMode,
+        translation_enabled: config.translationEnabled,
+        plp_search_mode: config.plpSearchMode,
+        image_boost: config.imageBoost,
+        image_knn_threshold: config.imageKnnThreshold,
+        text_knn_threshold: config.textKnnThreshold,
+        k: config.k,
+        num_candidates: config.numCandidates,
+        priorityFactors: [],
+        affinityProfile: {},
+      };
+
+      // Conditionally add optional parameters
+      if (config.useSearchFormula && config.searchFormula) {
+        searchObj.search_formula = config.searchFormula;
+      }
+      if (config.useBucketSize) {
+        searchObj.bucket_size = config.bucketSize;
+      }
+      if (config.sortByEnabled) {
+        searchObj.sortBy = { field: 'popularity' };
+      }
+      if (config.useLocale && config.locale) {
+        searchObj.locale = config.locale;
+      }
+
       const payload = {
         data: [
           {
             fId: fId,
-            wId: config.widgetId || null,
+            wId: config.widgetId ? String(config.widgetId) : null,
             maxProducts: config.maxProducts,
             rules: [],
             filtering: [],
             strategy: config.strategy,
             searchFilters: [],
-            search: {
-              text: query || "*",
-              pagination: {
-                numItems: config.itemsPerPage,
-                offset: offset,
-              },
-              suggestMode: config.suggestMode,
-              explain_mode: config.explainMode,
-              translation_enabled: config.translationEnabled,
-              plp_search_mode: config.plpSearchMode,
-              image_boost: config.imageBoost,
-              image_knn_threshold: config.imageKnnThreshold,
-              text_knn_threshold: config.textKnnThreshold,
-              k: config.k,
-              num_candidates: config.numCandidates,
-              search_formula: config.searchFormula,
-              bucket_size: config.bucketSize,
-              ...(config.sortByEnabled && { sortBy: { field: 'popularity' } }),
-              priorityFactors: [],
-              affinityProfile: {},
-              locale: config.locale,
-            },
+            search: searchObj,
           },
         ],
         ctx: { 

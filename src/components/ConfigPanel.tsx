@@ -95,7 +95,18 @@ export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
                 <ConfigField label="Strategy" value={localConfig.strategy} onChange={(v: string) => updateField('strategy', v)} />
                 <ConfigField label="Max Products" type="number" value={localConfig.maxProducts} onChange={(v: string) => updateField('maxProducts', parseInt(v))} />
                 <ConfigField label="Items Per Page" type="number" value={localConfig.itemsPerPage} onChange={(v: string) => updateField('itemsPerPage', parseInt(v))} />
-                <ConfigField label="Bucket Size" type="number" value={localConfig.bucketSize} onChange={(v: string) => updateField('bucketSize', parseInt(v))} />
+                <div className="flex items-center gap-2 col-span-2">
+                  <Toggle label="Bucket Size" checked={localConfig.useBucketSize} onChange={(v: boolean) => updateField('useBucketSize', v)} />
+                  {localConfig.useBucketSize && (
+                    <ConfigField label="" type="number" value={localConfig.bucketSize} onChange={(v: string) => updateField('bucketSize', parseInt(v))} className="flex-1" />
+                  )}
+                </div>
+                <div className="flex items-center gap-2 col-span-2">
+                  <Toggle label="Search Formula" checked={localConfig.useSearchFormula} onChange={(v: boolean) => updateField('useSearchFormula', v)} />
+                  {localConfig.useSearchFormula && (
+                    <input type="text" value={localConfig.searchFormula} onChange={(e) => updateField('searchFormula', e.target.value)} className="flex-1 bg-black/30 border border-gray-700 rounded px-2 py-1 text-[9px]" />
+                  )}
+                </div>
                 <div className="flex flex-wrap items-center gap-4 mt-2 col-span-2">
                   <Toggle label="Suggest Mode" checked={localConfig.suggestMode} onChange={(v: boolean) => updateField('suggestMode', v)} />
                   <Toggle label="Explain Mode" checked={localConfig.explainMode} onChange={(v: boolean) => updateField('explainMode', v)} />
@@ -115,7 +126,6 @@ export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
                 <ConfigField label="Text KNN Threshold" type="number" step="0.01" value={localConfig.textKnnThreshold} onChange={(v: string) => updateField('textKnnThreshold', parseFloat(v))} />
                 <ConfigField label="Image KNN Threshold" type="number" step="0.01" value={localConfig.imageKnnThreshold} onChange={(v: string) => updateField('imageKnnThreshold', parseFloat(v))} />
                 <ConfigField label="Image Boost" type="number" step="0.1" value={localConfig.imageBoost} onChange={(v: string) => updateField('imageBoost', parseFloat(v))} />
-                <ConfigField label="Search Formula" value={localConfig.searchFormula} onChange={(v: string) => updateField('searchFormula', v)} className="col-span-2" />
               </div>
             </section>
 
@@ -125,7 +135,12 @@ export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
               <div className="grid grid-cols-2 gap-4">
                 <ConfigField label="Context Type (type)" value={localConfig.ctxType} onChange={(v: string) => updateField('ctxType', v)} description="e.g. HOMEPAGE" />
                 <ConfigField label="Language (lng)" value={localConfig.language} onChange={(v: string) => updateField('language', v)} />
-                <ConfigField label="Locale" value={localConfig.locale} onChange={(v: string) => updateField('locale', v)} />
+                <div className="flex items-center gap-2 col-span-2">
+                  <Toggle label="Locale" checked={localConfig.useLocale} onChange={(v: boolean) => updateField('useLocale', v)} />
+                  {localConfig.useLocale && (
+                    <input type="text" value={localConfig.locale} onChange={(e) => updateField('locale', e.target.value)} className="flex-1 bg-black/30 border border-gray-700 rounded px-2 py-1 text-[9px]" />
+                  )}
+                </div>
                 <ConfigField label="Geo Code" value={localConfig.geoCode} onChange={(v: string) => updateField('geoCode', v)} />
                 <ConfigField label="Geo Region" value={localConfig.geoRegionCode} onChange={(v: string) => updateField('geoRegionCode', v)} />
                 <ConfigField label="Visitor ID (uid)" value={localConfig.uid} onChange={(v: string) => updateField('uid', v)} className="col-span-2" />

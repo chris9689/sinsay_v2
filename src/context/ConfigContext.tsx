@@ -21,7 +21,11 @@ export interface DYConfig {
   k: number;
   numCandidates: number;
   searchFormula: string;
+  useSearchFormula: boolean;
   bucketSize: number;
+  useBucketSize: boolean;
+  locale: string;
+  useLocale: boolean;
   sortByEnabled: boolean;
   uid: string;
   geoCode: string;
@@ -56,7 +60,11 @@ const defaultConfig: DYConfig = {
   k: 100,
   numCandidates: 500,
   searchFormula: '',
+  useSearchFormula: false,
   bucketSize: 10,
+  useBucketSize: false,
+  locale: 'en_US',
+  useLocale: false,
   sortByEnabled: false,
   uid: '9190339902873124000',
   geoCode: 'US',
