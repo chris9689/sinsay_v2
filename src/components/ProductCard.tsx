@@ -69,16 +69,6 @@ export const ProductCard = ({ item }: { item: any }) => {
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className="absolute inset-x-0 bottom-0 frosted-glass p-4"
             >
-              <div className="flex flex-wrap gap-2 mb-3">
-                {['XS', 'S', 'M', 'L', 'XL'].map(size => (
-                  <span 
-                    key={size} 
-                    className="text-[10px] border border-gray-200 px-2 py-1 hover:border-black transition-colors"
-                  >
-                    {size}
-                  </span>
-                ))}
-              </div>
               <button className="w-full bg-black text-white py-2 text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-900 transition-colors">
                 <ShoppingBag size={14} /> Add to Cart
               </button>

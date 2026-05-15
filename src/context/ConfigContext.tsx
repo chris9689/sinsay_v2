@@ -22,8 +22,7 @@ export interface DYConfig {
   numCandidates: number;
   searchFormula: string;
   bucketSize: number;
-  sortByField: string;
-  sortByOrder: 'asc' | 'desc';
+  sortByEnabled: boolean;
   uid: string;
   geoCode: string;
   geoRegionCode: string;
@@ -58,8 +57,7 @@ const defaultConfig: DYConfig = {
   numCandidates: 500,
   searchFormula: '',
   bucketSize: 10,
-  sortByField: 'price',
-  sortByOrder: 'asc',
+  sortByEnabled: false,
   uid: '9190339902873124000',
   geoCode: 'US',
   geoRegionCode: 'US_VA',

@@ -101,6 +101,7 @@ export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
                   <Toggle label="Explain Mode" checked={localConfig.explainMode} onChange={(v: boolean) => updateField('explainMode', v)} />
                   <Toggle label="Translation" checked={localConfig.translationEnabled} onChange={(v: boolean) => updateField('translationEnabled', v)} />
                   <Toggle label="PLP Mode" checked={localConfig.plpSearchMode} onChange={(v: boolean) => updateField('plpSearchMode', v)} />
+                  <Toggle label="Sort by Popularity" checked={localConfig.sortByEnabled} onChange={(v: boolean) => updateField('sortByEnabled', v)} />
                 </div>
               </div>
             </section>

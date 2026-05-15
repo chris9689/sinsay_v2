@@ -2,13 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useConfig } from '../context/ConfigContext';
 
 export interface DYSearchResponse {
+  totalNumResults: number;
   slots: Array<{
     item: any;
     strId: string | number;
     md: any;
     fallback: boolean;
   }>;
-  total_num_results: number;
   facets: {
     [key: string]: Array<{
       value: string;
@@ -34,8 +34,6 @@ export const useDYSearch = (query: string, offset: number, filters: any[] = []) 
       const fId = isNaN(Number(config.feedId)) ? config.feedId : Number(config.feedId);
 
       const payload = {
-        region: config.region,
-        sectionId: config.sectionId,
         data: [
           {
             fId: fId,
@@ -62,10 +60,7 @@ export const useDYSearch = (query: string, offset: number, filters: any[] = []) 
               num_candidates: config.numCandidates,
               search_formula: config.searchFormula,
               bucket_size: config.bucketSize,
-              sortBy: config.sortByField ? {
-                field: config.sortByField,
-                order: config.sortByOrder
-              } : undefined,
+              ...(config.sortByEnabled && { sortBy: { field: 'popularity' } }),
               priorityFactors: [],
               affinityProfile: {},
               locale: config.locale,
@@ -83,14 +78,22 @@ export const useDYSearch = (query: string, offset: number, filters: any[] = []) 
         uid: config.uid || undefined
       };
 
+      // Create clean payload for display (without region/sectionId) 
       setLastRequestPayload(payload);
+
+      // Include region and sectionId for the proxy endpoint to route correctly
+      const requestPayload = {
+        region: config.region,
+        sectionId: config.sectionId,
+        ...payload
+      };
 
       const response = await fetch('/api/dy-search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(requestPayload),
       });
 
       if (!response.ok) {
@@ -107,6 +110,20 @@ export const useDYSearch = (query: string, offset: number, filters: any[] = []) 
         console.error('DY API: Unexpected response structure', json);
         throw new Error('Invalid response format: Missing "response" array or empty response.');
       }
+
+      // Extract totalNumResults from the first response object
+      const totalResults = json.response?.[0]?.totalNumResults ?? 0;
+
+      // Parse first response as main results
+      const firstResponse = json.response[0];
+      return {
+        totalNumResults: totalResults,
+        slots: firstResponse.slots || [],
+        facets: firstResponse.facets || {},
+        spellCheckedQuery: firstResponse.spellCheckedQuery || null,
+        translatedQuery: firstResponse.translatedQuery || null,
+        errorMessage: firstResponse.errorMessage || null
+      };
 
       const result = json.response[0];
 

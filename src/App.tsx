@@ -128,7 +128,7 @@ export default function App() {
             <h1 className="text-3xl font-light uppercase tracking-tight flex items-center gap-4">
               {debouncedSearch ? `Search Results: ${debouncedSearch}` : 'New Arrivals'}
               <span className="text-sm text-gray-400 font-normal normal-case">
-                ({data?.total_num_results || 0} items)
+                ({data?.totalNumResults || 0} items)
               </span>
             </h1>
           </div>
@@ -223,7 +223,7 @@ export default function App() {
             )}
 
             {/* Pagination Controls */}
-            {data && data.total_num_results > 0 && (
+            {data && data.totalNumResults > 0 && (
               <div className="mt-20 flex justify-center items-center gap-4">
                 <button 
                   disabled={offset === 0}
@@ -233,10 +233,10 @@ export default function App() {
                   Previous
                 </button>
                 <span className="text-[11px] font-bold text-gray-400">
-                  Page {Math.floor(offset / config.itemsPerPage) + 1} / {Math.ceil(data.total_num_results / config.itemsPerPage)}
+                  Page {Math.floor(offset / config.itemsPerPage) + 1} / {Math.ceil(data.totalNumResults / config.itemsPerPage)}
                 </span>
                 <button 
-                  disabled={offset + config.itemsPerPage >= data.total_num_results}
+                  disabled={offset + config.itemsPerPage >= data.totalNumResults}
                   onClick={() => setOffset(offset + config.itemsPerPage)}
                   className="px-6 py-2 border border-gray-200 text-[11px] font-bold uppercase tracking-widest hover:border-black disabled:opacity-30 disabled:hover:border-gray-200 transition-all"
                 >
