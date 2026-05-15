@@ -1,11 +1,11 @@
-export function extractDyItems(response: any) {
+export function extractDyItems(response: any): any[] {
   try {
     const slots = response?.response?.[0]?.slots ?? response?.slots;
 
     if (Array.isArray(slots)) {
       return slots
         .map((slot: any) => slot?.item)
-        .filter((item: unknown) => item !== undefined && item !== null);
+        .filter((item: any) => item !== undefined && item !== null);
     }
 
     console.warn('No valid slots array found in response:', response);

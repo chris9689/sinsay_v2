@@ -44,7 +44,7 @@ export default function App() {
   }, []);
 
   const { data, isLoading } = useDYSearch(debouncedSearch, offset, selectedFilters);
-  const items = extractDyItems(data);
+  const items: any[] = extractDyItems(data);
 
   const toggleFilter = (field: string, value: string) => {
     setSelectedFilters(prev => {
