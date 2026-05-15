@@ -40,9 +40,9 @@ function normalizeFacetOptions(value: any): NormalizedFacetOption[] {
       return {
         value: valueStr,
         count: typeof option.count === 'number' ? option.count : undefined,
-      };
+      } as NormalizedFacetOption;
     })
-    .filter((option: NormalizedFacetOption | null): option is NormalizedFacetOption => option !== null);
+    .filter((option): option is NormalizedFacetOption => option !== null);
 }
 
 function normalizeFacets(facets: any): NormalizedFacet[] {
