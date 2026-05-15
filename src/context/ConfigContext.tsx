@@ -5,7 +5,6 @@ export interface DYConfig {
   feedId: string;
   widgetId: string;
   region: 'US' | 'EU';
-  locale: string;
   language: string;
   ctxType: string;
   itemsPerPage: number;
@@ -44,7 +43,6 @@ const defaultConfig: DYConfig = {
   feedId: '85470',
   widgetId: '12345',
   region: 'US',
-  locale: 'en_US',
   language: 'en_US',
   ctxType: 'HOMEPAGE',
   itemsPerPage: 12,
