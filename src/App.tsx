@@ -222,22 +222,6 @@ export default function App() {
                 </div>
               );
             })()}
-                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                    <Search size={32} className="text-gray-300" />
-                  </div>
-                  <h3 className="text-xl font-bold uppercase tracking-tight mb-2">No products found</h3>
-                  <p className="text-gray-400 max-w-sm text-sm">
-                    We couldn't find anything matching your search. Try different keywords or adjust your filters.
-                  </p>
-                  <button 
-                    onClick={() => { setSearchTerm(''); updateSearch(''); setSelectedFilters([]); }}
-                    className="mt-8 px-8 py-3 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors"
-                  >
-                    Clear all filters
-                  </button>
-                </div>
-              ) : null;
-            })()}
             {!isLoading && data && typeof data.totalNumResults === 'number' && data.totalNumResults > 0 && (
               <div className="mt-20 flex justify-center items-center gap-4">
                 <button 
