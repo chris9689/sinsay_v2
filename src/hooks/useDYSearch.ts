@@ -8,7 +8,7 @@ export interface DYSearchResponse {
     md: any;
     fallback: boolean;
   }>;
-  totalNumResults: number;
+  total_num_results: number;
   facets: {
     [key: string]: Array<{
       value: string;
