@@ -12,7 +12,6 @@ interface VisualSearchOverlayProps {
 export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
   productImageUrl,
   onClose,
-  onVisualSearchFromProduct,
 }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(productImageUrl || null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
