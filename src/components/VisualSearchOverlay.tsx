@@ -3,12 +3,10 @@ import { X, Camera, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { imageToBase64 } from '../utils/imageToBase64';
 import { useVisualSearch } from '../hooks/useVisualSearch';
-import { ProductCard } from './ProductCard';
 
 interface VisualSearchOverlayProps {
   productImageUrl?: string;
   onClose: () => void;
-  onVisualSearchFromProduct?: (imageUrl: string) => void;
 }
 
 export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
@@ -290,7 +288,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                   </div>
                 ) : (
                   <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                    {results.slice(0, 20).map((item, idx) => (
+                    {results.slice(0, 20).map((item: any, idx: number) => (
                       <div key={`${item.id || idx}`} className="border border-gray-100 rounded p-2 hover:border-black transition-colors">
                         <img 
                           src={item.image_url || item.image_url_small || item.imageUrl}

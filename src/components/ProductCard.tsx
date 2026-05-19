@@ -81,9 +81,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ item, onVisualSearch }
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    const imageUrl = imageUrl || item.image_url_small || item.imageUrl || '';
-                    if (imageUrl) {
-                      onVisualSearch(imageUrl);
+                    const selectedImageUrl = imageUrl || item.image_url_small || item.imageUrl || '';
+                    if (selectedImageUrl) {
+                      onVisualSearch(selectedImageUrl);
                     }
                   }}
                   className="w-full bg-white/20 text-white py-2 text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white/30 transition-colors border border-white/30"
