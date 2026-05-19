@@ -1,0 +1,316 @@
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { X, Camera, Upload } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { imageToBase64 } from '../utils/imageToBase64';
+import { useVisualSearch } from '../hooks/useVisualSearch';
+import { ProductCard } from './ProductCard';
+
+interface VisualSearchOverlayProps {
+  productImageUrl?: string;
+  onClose: () => void;
+  onVisualSearchFromProduct?: (imageUrl: string) => void;
+}
+
+export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
+  productImageUrl,
+  onClose,
+  onVisualSearchFromProduct,
+}) => {
+  const [selectedImage, setSelectedImage] = useState<string | null>(productImageUrl || null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [useMode, setUseMode] = useState<'product' | 'upload'>(productImageUrl ? 'product' : 'upload');
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [conversionError, setConversionError] = useState<string | null>(null);
+  const [isConverting, setIsConverting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Use the Visual Search hook
+  const { results, loading: isSearching, error: searchError } = useVisualSearch(imageBase64);
+
+  // Handle ESC key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  const handleImageUpload = useCallback((file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setConversionError('Please select a valid image file');
+      return;
+    }
+
+    setSelectedFile(file);
+    setSelectedImage(URL.createObjectURL(file));
+    setUseMode('upload');
+    setImageBase64(null);
+    setConversionError(null);
+  }, []);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleImageUpload(files[0]);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleImageUpload(e.target.files[0]);
+    }
+  };
+
+  const convertImageToBase64 = async () => {
+    setIsConverting(true);
+    setConversionError(null);
+
+    try {
+      let source: string | File;
+
+      if (useMode === 'product' && productImageUrl) {
+        source = productImageUrl;
+      } else if (useMode === 'upload' && selectedFile) {
+        source = selectedFile;
+      } else {
+        setConversionError('No image selected');
+        setIsConverting(false);
+        return;
+      }
+
+      const base64 = await imageToBase64(source);
+      setImageBase64(base64);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to convert image';
+      setConversionError(errorMsg);
+      console.error('[Visual Search] Conversion error:', errorMsg);
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
+  const handleSwitchMode = (mode: 'product' | 'upload') => {
+    setUseMode(mode);
+    setImageBase64(null);
+    setConversionError(null);
+
+    if (mode === 'product' && productImageUrl) {
+      setSelectedImage(productImageUrl);
+    }
+  };
+
+  const currentDisplayImage = useMode === 'product' ? productImageUrl : selectedImage;
+  const canSearch = currentDisplayImage && !isConverting && !isSearching;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onMouseDown={onClose}
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ duration: 0.3 }}
+          onMouseDown={(e) => e.stopPropagation()}
+          className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <Camera size={20} className="text-black" />
+              <h2 className="text-lg font-bold uppercase tracking-wider">Visual Search</h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+              {/* Image Selection Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700">
+                  Select Image
+                </h3>
+
+                {/* Mode Toggle Buttons */}
+                <div className="flex gap-2">
+                  {productImageUrl && (
+                    <button
+                      onClick={() => handleSwitchMode('product')}
+                      className={`flex-1 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all ${
+                        useMode === 'product'
+                          ? 'bg-black text-white'
+                          : 'bg-gray-100 text-black hover:bg-gray-200'
+                      }`}
+                    >
+                      Product Image
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleSwitchMode('upload')}
+                    className={`flex-1 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all ${
+                      useMode === 'upload'
+                        ? 'bg-black text-white'
+                        : 'bg-gray-100 text-black hover:bg-gray-200'
+                    }`}
+                  >
+                    Upload Image
+                  </button>
+                </div>
+
+                {/* Image Preview */}
+                {currentDisplayImage ? (
+                  <div className="relative aspect-square bg-gray-100 rounded overflow-hidden">
+                    <img
+                      src={currentDisplayImage}
+                      alt="Selected"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          'https://placehold.co/400x400?text=Image+Error';
+                      }}
+                    />
+                  </div>
+                ) : null}
+
+                {/* Upload Area (conditionally shown) */}
+                {useMode === 'upload' && !selectedImage && (
+                  <div
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="aspect-square bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-black hover:bg-gray-100 transition-all"
+                  >
+                    <Upload size={32} className="text-gray-400 mb-2" />
+                    <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                      Drag & drop image here
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">or click to select</p>
+                  </div>
+                )}
+
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileInputChange}
+                  className="hidden"
+                  aria-label="Upload image"
+                />
+
+                {/* Change Image Button (for upload mode) */}
+                {useMode === 'upload' && selectedImage && (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full px-4 py-2 bg-gray-100 text-black text-xs font-bold uppercase tracking-wider rounded hover:bg-gray-200 transition-all"
+                  >
+                    Change Image
+                  </button>
+                )}
+
+                {/* Error Display */}
+                {conversionError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 font-medium">
+                    {conversionError}
+                  </div>
+                )}
+
+                {searchError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 font-medium">
+                    {searchError}
+                  </div>
+                )}
+
+                {/* Search Button */}
+                <button
+                  onClick={convertImageToBase64}
+                  disabled={!canSearch}
+                  className={`w-full px-4 py-3 text-xs font-bold uppercase tracking-wider rounded transition-all ${
+                    canSearch
+                      ? 'bg-black text-white hover:bg-gray-900'
+                      : 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                  }`}
+                >
+                  {isConverting || isSearching ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="inline-block animate-spin">⋯</span>
+                      Searching...
+                    </span>
+                  ) : (
+                    'Search'
+                  )}
+                </button>
+              </div>
+
+              {/* Results Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700">
+                  Results {results.length > 0 ? `(${results.length})` : ''}
+                </h3>
+
+                {isSearching ? (
+                  <div className="flex items-center justify-center h-96">
+                    <div className="text-center">
+                      <div className="animate-spin text-4xl mb-4">⋯</div>
+                      <p className="text-sm text-gray-500 uppercase tracking-wider font-medium">
+                        Searching...
+                      </p>
+                    </div>
+                  </div>
+                ) : results.length === 0 && imageBase64 ? (
+                  <div className="flex items-center justify-center h-96">
+                    <div className="text-center">
+                      <Camera size={32} className="text-gray-300 mx-auto mb-4" />
+                      <p className="text-sm text-gray-500 uppercase tracking-wider font-medium">
+                        No results found
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                    {results.slice(0, 20).map((item, idx) => (
+                      <div key={`${item.id || idx}`} className="border border-gray-100 rounded p-2 hover:border-black transition-colors">
+                        <img 
+                          src={item.image_url || item.image_url_small || item.imageUrl}
+                          alt={item.name || 'Product'}
+                          className="w-full aspect-square object-cover rounded mb-2"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://placehold.co/200x200?text=No+Image';
+                          }}
+                        />
+                        <p className="text-xs font-bold line-clamp-2">{item.name || 'Unknown'}</p>
+                        <p className="text-sm font-bold text-sinsay-red mt-1">{item.price || item.dy_display_price || 'N/A'} PLN</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};

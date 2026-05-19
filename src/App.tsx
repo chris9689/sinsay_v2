@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, SlidersHorizontal, ChevronDown, Heart, ShoppingBag, User, X } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronDown, Heart, ShoppingBag, User, X, Camera } from 'lucide-react';
 import { useDYSearch } from './hooks/useDYSearch';
 import { useConfig } from './context/ConfigContext';
 import { extractDyPayload } from './utils/dyResponseAdapter';
 import { ProductCard } from './components/ProductCard';
 import { ConfigPanel } from './components/ConfigPanel';
+import { VisualSearchOverlay } from './components/VisualSearchOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import debounce from 'lodash/debounce';
 
@@ -17,6 +18,8 @@ export default function App() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<any[]>([]);
   const [logoError, setLogoError] = useState(false);
+  const [showVisualSearch, setShowVisualSearch] = useState(false);
+  const [productImageForSearch, setProductImageForSearch] = useState<string | undefined>();
 
   // Debounce search input
   const updateSearch = useCallback(
@@ -98,6 +101,14 @@ export default function App() {
                 <X size={18} />
               </button>
             )}
+            <button
+              onClick={() => setShowVisualSearch(true)}
+              className="absolute right-12 top-3 text-gray-400 hover:text-black transition-colors"
+              title="Visual search"
+              aria-label="Visual search"
+            >
+              <Camera size={18} />
+            </button>
           </div>
 
           <div className="flex items-center gap-7">
@@ -203,7 +214,11 @@ export default function App() {
                 items.map((item, idx) => (
                   <ProductCard 
                     key={`${(item as any)?.sku ?? (item as any)?.id ?? (item as any)?.group_id ?? String(idx)}-${idx}`} 
-                    item={item} 
+                    item={item}
+                    onVisualSearch={(imageUrl) => {
+                      setProductImageForSearch(imageUrl);
+                      setShowVisualSearch(true);
+                    }}
                   />
                 ))
               )}
@@ -338,6 +353,16 @@ export default function App() {
         </div>
         <span className="opacity-80">to configure Dynamic Yield API</span>
       </div>
+
+      {/* Visual Search Overlay */}
+      <AnimatePresence>
+        {showVisualSearch && (
+          <VisualSearchOverlay
+            productImageUrl={productImageForSearch}
+            onClose={() => setShowVisualSearch(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

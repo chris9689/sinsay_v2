@@ -1,8 +1,13 @@
 import { useState } from 'react';
-import { Heart, ShoppingBag } from 'lucide-react';
+import { Heart, ShoppingBag, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export const ProductCard = ({ item }: { item: any }) => {
+interface ProductCardProps {
+  item: any;
+  onVisualSearch?: (imageUrl: string) => void;
+}
+
+export const ProductCard: React.FC<ProductCardProps> = ({ item, onVisualSearch }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   if (!item) return null;
@@ -67,11 +72,26 @@ export const ProductCard = ({ item }: { item: any }) => {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="absolute inset-x-0 bottom-0 frosted-glass p-4"
+              className="absolute inset-x-0 bottom-0 frosted-glass p-4 space-y-2"
             >
               <button className="w-full bg-black text-white py-2 text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-900 transition-colors">
                 <ShoppingBag size={14} /> Add to Cart
               </button>
+              {onVisualSearch && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const imageUrl = imageUrl || item.image_url_small || item.imageUrl || '';
+                    if (imageUrl) {
+                      onVisualSearch(imageUrl);
+                    }
+                  }}
+                  className="w-full bg-white/20 text-white py-2 text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white/30 transition-colors border border-white/30"
+                  title="Search with this product image"
+                >
+                  <Camera size={14} /> Visual Search
+                </button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
