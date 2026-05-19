@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Camera, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { imageToBase64 } from '../utils/imageToBase64';
-import { useVisualSearch } from '../hooks/useVisualSearch';
+import { useVisualSearch, VisualSearchInput } from '../hooks/useVisualSearch';
 
 interface VisualSearchOverlayProps {
   productImageUrl?: string;
@@ -16,13 +16,12 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(productImageUrl || null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [useMode, setUseMode] = useState<'product' | 'upload'>(productImageUrl ? 'product' : 'upload');
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [searchPayload, setSearchPayload] = useState<VisualSearchInput | null>(null);
   const [conversionError, setConversionError] = useState<string | null>(null);
   const [isConverting, setIsConverting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Use the Visual Search hook
-  const { results, loading: isSearching, error: searchError } = useVisualSearch(imageBase64);
+  const { results, loading: isSearching, error: searchError } = useVisualSearch(searchPayload);
 
   // Handle ESC key
   useEffect(() => {
@@ -44,7 +43,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
     setSelectedFile(file);
     setSelectedImage(URL.createObjectURL(file));
     setUseMode('upload');
-    setImageBase64(null);
+    setSearchPayload(null);
     setConversionError(null);
   }, []);
 
@@ -68,27 +67,25 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
     }
   };
 
-  const convertImageToBase64 = async () => {
+  const runVisualSearch = async () => {
     setIsConverting(true);
     setConversionError(null);
 
     try {
-      let source: string | File;
-
       if (useMode === 'product' && productImageUrl) {
-        source = productImageUrl;
-      } else if (useMode === 'upload' && selectedFile) {
-        source = selectedFile;
-      } else {
-        setConversionError('No image selected');
-        setIsConverting(false);
+        setSearchPayload({ imageUrl: productImageUrl });
         return;
       }
 
-      const base64 = await imageToBase64(source);
-      setImageBase64(base64);
+      if (useMode === 'upload' && selectedFile) {
+        const base64 = await imageToBase64(selectedFile);
+        setSearchPayload({ imageBase64: base64 });
+        return;
+      }
+
+      setConversionError('No image selected');
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to convert image';
+      const errorMsg = error instanceof Error ? error.message : 'Failed to prepare image for visual search';
       setConversionError(errorMsg);
       console.error('[Visual Search] Conversion error:', errorMsg);
     } finally {
@@ -98,11 +95,13 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
 
   const handleSwitchMode = (mode: 'product' | 'upload') => {
     setUseMode(mode);
-    setImageBase64(null);
+    setSearchPayload(null);
     setConversionError(null);
 
-    if (mode === 'product' && productImageUrl) {
-      setSelectedImage(productImageUrl);
+    if (mode === 'product') {
+      setSelectedImage(productImageUrl || null);
+    } else {
+      setSelectedImage(selectedFile ? URL.createObjectURL(selectedFile) : null);
     }
   };
 
@@ -242,7 +241,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
 
                 {/* Search Button */}
                 <button
-                  onClick={convertImageToBase64}
+                  onClick={runVisualSearch}
                   disabled={!canSearch}
                   className={`w-full px-4 py-3 text-xs font-bold uppercase tracking-wider rounded transition-all ${
                     canSearch
@@ -276,31 +275,42 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                       </p>
                     </div>
                   </div>
-                ) : results.length === 0 && imageBase64 ? (
+                ) : searchPayload ? (
+                  results.length === 0 ? (
+                    <div className="flex items-center justify-center h-96">
+                      <div className="text-center">
+                        <Camera size={32} className="text-gray-300 mx-auto mb-4" />
+                        <p className="text-sm text-gray-500 uppercase tracking-wider font-medium">
+                          No results found
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                      {results.slice(0, 20).map((item: any, idx: number) => (
+                        <div key={`${item.id || idx}`} className="border border-gray-100 rounded p-2 hover:border-black transition-colors">
+                          <img 
+                            src={item.image_url || item.image_url_small || item.imageUrl}
+                            alt={item.name || 'Product'}
+                            className="w-full aspect-square object-cover rounded mb-2"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://placehold.co/200x200?text=No+Image';
+                            }}
+                          />
+                          <p className="text-xs font-bold line-clamp-2">{item.name || 'Unknown'}</p>
+                          <p className="text-sm font-bold text-sinsay-red mt-1">{item.price || item.dy_display_price || 'N/A'} PLN</p>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                ) : (
                   <div className="flex items-center justify-center h-96">
-                    <div className="text-center">
-                      <Camera size={32} className="text-gray-300 mx-auto mb-4" />
-                      <p className="text-sm text-gray-500 uppercase tracking-wider font-medium">
-                        No results found
+                    <div className="text-center text-gray-500">
+                      <Camera size={32} className="mx-auto mb-4" />
+                      <p className="text-sm uppercase tracking-wider font-medium">
+                        Select or upload an image to begin visual search.
                       </p>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                    {results.slice(0, 20).map((item: any, idx: number) => (
-                      <div key={`${item.id || idx}`} className="border border-gray-100 rounded p-2 hover:border-black transition-colors">
-                        <img 
-                          src={item.image_url || item.image_url_small || item.imageUrl}
-                          alt={item.name || 'Product'}
-                          className="w-full aspect-square object-cover rounded mb-2"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://placehold.co/200x200?text=No+Image';
-                          }}
-                        />
-                        <p className="text-xs font-bold line-clamp-2">{item.name || 'Unknown'}</p>
-                        <p className="text-sm font-bold text-sinsay-red mt-1">{item.price || item.dy_display_price || 'N/A'} PLN</p>
-                      </div>
-                    ))}
                   </div>
                 )}
               </div>

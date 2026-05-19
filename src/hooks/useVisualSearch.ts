@@ -1,21 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 
+export interface VisualSearchInput {
+  imageBase64?: string;
+  imageUrl?: string;
+}
+
 export interface VisualSearchResult {
   results: any[];
   loading: boolean;
   error: string | null;
 }
 
-/**
- * Hook for performing visual search using an image
- * @param imageBase64 - Base64 encoded image data
- * @returns Object with results, loading state, and error
- */
-export function useVisualSearch(imageBase64: string | null) {
+export function useVisualSearch(input: VisualSearchInput | null) {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['visualSearch', imageBase64],
+    queryKey: ['visualSearch', input?.imageUrl ?? input?.imageBase64 ?? ''],
     queryFn: async () => {
-      if (!imageBase64) {
+      if (!input?.imageBase64 && !input?.imageUrl) {
         throw new Error('No image provided');
       }
 
@@ -24,9 +24,7 @@ export function useVisualSearch(imageBase64: string | null) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          imageBase64,
-        }),
+        body: JSON.stringify(input),
       });
 
       if (!response.ok) {
@@ -38,7 +36,7 @@ export function useVisualSearch(imageBase64: string | null) {
 
       return response.json();
     },
-    enabled: !!imageBase64,
+    enabled: !!input?.imageBase64 || !!input?.imageUrl,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 

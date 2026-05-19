@@ -10,14 +10,13 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { imageBase64 } = req.body;
+  const { imageBase64, imageUrl } = req.body;
 
   // Validate input
-  if (!imageBase64 || typeof imageBase64 !== 'string') {
-    return res.status(400).json({ error: 'imageBase64 is required and must be a string' });
+  if ((!imageBase64 || typeof imageBase64 !== 'string') && (!imageUrl || typeof imageUrl !== 'string')) {
+    return res.status(400).json({ error: 'imageBase64 or imageUrl is required and must be a string' });
   }
 
-  // Get API key from environment (server-side only)
   const apiKey = process.env.VISUALSEARCH_API_KEY;
   if (!apiKey) {
     console.error('[Visual Search] API key not configured');
@@ -25,7 +24,8 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // Construct the Visual Search API payload according to spec
+    const resolvedBase64 = imageBase64 ?? await fetchImageUrlAsBase64(imageUrl);
+
     const payload = {
       user: {
         active_consent_accepted: false,
@@ -35,7 +35,7 @@ export default async function handler(req: any, res: any) {
           order: 'asc',
           field: 'popularity',
         },
-        imageBase64,
+        imageBase64: resolvedBase64,
       },
       context: {
         page: {
@@ -53,7 +53,6 @@ export default async function handler(req: any, res: any) {
       },
     };
 
-    // Make request to Visual Search API
     const response = await fetch('https://dy-api.com/v2/serve/user/search', {
       method: 'POST',
       headers: {
@@ -65,11 +64,7 @@ export default async function handler(req: any, res: any) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(
-        '[Visual Search] API Error:',
-        response.status,
-        errorText
-      );
+      console.error('[Visual Search] API Error:', response.status, errorText);
       return res.status(response.status).json({
         error: `Visual Search API error: ${response.statusText}`,
         details: errorText,
@@ -77,9 +72,6 @@ export default async function handler(req: any, res: any) {
     }
 
     const data = await response.json();
-
-    // Extract results from the response
-    // The API typically returns: { response: [{ slots: [...], facets: [...] }] }
     const results = extractVisualSearchResults(data);
 
     return res.status(200).json({
@@ -95,6 +87,24 @@ export default async function handler(req: any, res: any) {
   }
 }
 
+async function fetchImageUrlAsBase64(imageUrl: string): Promise<string> {
+  const response = await fetch(imageUrl, {
+    method: 'GET',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image URL: ${response.status} ${response.statusText}`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const maxBytes = 10 * 1024 * 1024;
+  if (arrayBuffer.byteLength > maxBytes) {
+    throw new Error('Image size exceeds 10MB limit');
+  }
+
+  return Buffer.from(arrayBuffer).toString('base64');
+}
+
 /**
  * Extract product results from Visual Search API response
  */
@@ -102,7 +112,6 @@ function extractVisualSearchResults(response: any): any[] {
   try {
     const items: any[] = [];
 
-    // Handle response structure: response[0].slots contain items
     if (
       Array.isArray(response.response) &&
       response.response.length > 0 &&
