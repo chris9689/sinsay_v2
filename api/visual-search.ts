@@ -110,21 +110,43 @@ async function fetchImageUrlAsBase64(imageUrl: string): Promise<string> {
  */
 function extractVisualSearchResults(response: any): any[] {
   try {
-    const items: any[] = [];
+    const slots: any[] = [];
 
     if (
       Array.isArray(response.response) &&
       response.response.length > 0 &&
       Array.isArray(response.response[0].slots)
     ) {
-      for (const slot of response.response[0].slots) {
-        if (slot.item) {
-          items.push(slot.item);
+      slots.push(...response.response[0].slots);
+    }
+
+    if (Array.isArray(response.choices)) {
+      for (const choice of response.choices) {
+        const variations = Array.isArray(choice.variations) ? choice.variations : [];
+        for (const variation of variations) {
+          const payloadData = variation.payload?.data;
+          if (payloadData && Array.isArray(payloadData.slots)) {
+            slots.push(...payloadData.slots);
+          }
         }
       }
     }
 
-    return items;
+    return slots.map((slot) => {
+      if (slot.item) {
+        return slot.item;
+      }
+
+      if (slot.productData) {
+        return {
+          ...slot.productData,
+          sku: slot.sku ?? slot.productData.sku,
+          slotId: slot.slotId,
+        };
+      }
+
+      return slot;
+    });
   } catch (error) {
     console.error('[Visual Search] Error extracting results:', error);
     return [];
