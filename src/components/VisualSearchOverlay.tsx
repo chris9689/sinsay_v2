@@ -123,7 +123,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.3 }}
           onMouseDown={(e) => e.stopPropagation()}
-          className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col"
+          className="relative w-full max-w-6xl md:max-w-7xl max-h-[90vh] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
@@ -286,32 +286,36 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                      {results.slice(0, 20).map((item: any, idx: number) => (
-                        <div key={`${item.id || item.sku || idx}`} className="border border-gray-100 rounded p-2 hover:border-black transition-colors">
-                          <img 
-                            src={
-                              item.image_url ||
-                              item.image_url_small ||
-                              item.imageUrl ||
-                              item.productData?.image_url ||
-                              item.productData?.imageUrl ||
-                              'https://placehold.co/200x200?text=No+Image'
-                            }
-                            alt={item.name || item.productData?.name || 'Product'}
-                            className="w-full aspect-square object-cover rounded mb-2"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://placehold.co/200x200?text=No+Image';
-                            }}
-                          />
-                          <p className="text-xs font-bold line-clamp-2">
-                            {item.name || item.productData?.name || 'Unknown'}
-                          </p>
-                          <p className="text-sm font-bold text-sinsay-red mt-1">
-                            {item.price || item.dy_display_price || item.productData?.dy_display_price || 'N/A'} PLN
-                          </p>
-                        </div>
-                      ))}
+                    <div className="max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {results.slice(0, 20).map((item: any, idx: number) => (
+                          <div key={`${item.id || item.sku || idx}`} className="border border-gray-100 rounded p-3 hover:border-black transition-colors bg-white shadow-sm">
+                            <div className="aspect-square overflow-hidden rounded mb-3 bg-gray-100">
+                              <img
+                                src={
+                                  item.image_url ||
+                                  item.image_url_small ||
+                                  item.imageUrl ||
+                                  item.productData?.image_url ||
+                                  item.productData?.imageUrl ||
+                                  'https://placehold.co/200x200?text=No+Image'
+                                }
+                                alt={item.name || item.productData?.name || 'Product'}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://placehold.co/200x200?text=No+Image';
+                                }}
+                              />
+                            </div>
+                            <p className="text-xs font-bold line-clamp-2 mb-1">
+                              {item.name || item.productData?.name || 'Unknown'}
+                            </p>
+                            <p className="text-sm font-bold text-sinsay-red">
+                              {item.price || item.dy_display_price || item.productData?.dy_display_price || 'N/A'} PLN
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )
                 ) : (

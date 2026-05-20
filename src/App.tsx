@@ -102,7 +102,10 @@ export default function App() {
               </button>
             )}
             <button
-              onClick={() => setShowVisualSearch(true)}
+              onClick={() => {
+                setProductImageForSearch(undefined);
+                setShowVisualSearch(true);
+              }}
               className="absolute right-12 top-3 text-gray-400 hover:text-black transition-colors"
               title="Visual search"
               aria-label="Visual search"
