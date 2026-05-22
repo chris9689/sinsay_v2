@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Heart, ShoppingBag, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ScoreInfo } from './ScoreInfoIcon';
 
 interface ProductCardProps {
   item: any;
@@ -44,6 +45,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ item, onVisualSearch }
             <ShoppingBag size={48} strokeWidth={1} />
           </div>
         )}
+        
+        {/* Score Info Icon */}
+        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <ScoreInfo item={item} />
+        </div>
         
         {/* SALE Badge - Sinsay Style */}
         {item.on_sale && (

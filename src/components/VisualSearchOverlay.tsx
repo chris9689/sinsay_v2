@@ -3,6 +3,7 @@ import { X, Camera, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { imageToBase64 } from '../utils/imageToBase64';
 import { useVisualSearch, VisualSearchInput } from '../hooks/useVisualSearch';
+import { ScoreInfo } from './ScoreInfoIcon';
 
 interface VisualSearchOverlayProps {
   productImageUrl?: string;
@@ -310,7 +311,12 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                       className="flex-1 min-h-0 w-full overflow-y-scroll pr-2 custom-scrollbar bg-gray-50 rounded">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-2 grid-auto-rows-max">
                         {results.slice(0, 20).map((item: any, idx: number) => (
-                          <div key={`${item.id || item.sku || idx}`} className="border border-gray-100 rounded p-3 hover:border-black transition-colors bg-white shadow-sm">
+                          <div key={`${item.id || item.sku || idx}`} className="relative border border-gray-100 rounded p-3 hover:border-black transition-colors bg-white shadow-sm group">
+                            {/* Score Info Icon */}
+                            <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                              <ScoreInfo item={item} />
+                            </div>
+                            
                             <div className="aspect-square overflow-hidden rounded mb-3 bg-gray-100">
                               <img
                                 src={
