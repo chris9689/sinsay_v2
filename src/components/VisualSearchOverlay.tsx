@@ -20,6 +20,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
   const [conversionError, setConversionError] = useState<string | null>(null);
   const [isConverting, setIsConverting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const { results, totalResults, loading: isSearching, error: searchError } = useVisualSearch(searchPayload);
 
@@ -103,6 +104,23 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
     } else {
       setSelectedImage(selectedFile ? URL.createObjectURL(selectedFile) : null);
     }
+  };
+
+  const handleScrollContainerWheel = (e: React.WheelEvent) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isAtTop = scrollTop === 0;
+    const isAtBottom = scrollTop + clientHeight >= scrollHeight;
+    const isScrollingDown = e.deltaY > 0;
+    const isScrollingUp = e.deltaY < 0;
+
+    // Prevent default if at boundary and trying to scroll further
+    if ((isAtTop && isScrollingUp) || (isAtBottom && isScrollingDown)) {
+      e.preventDefault();
+    }
+    e.stopPropagation();
   };
 
   const currentDisplayImage = useMode === 'product' ? productImageUrl : selectedImage;
@@ -286,7 +304,10 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div className="flex-1 min-h-0 w-full overflow-y-scroll pr-2 custom-scrollbar bg-gray-50 rounded">
+                    <div 
+                      ref={scrollContainerRef}
+                      onWheel={handleScrollContainerWheel}
+                      className="flex-1 min-h-0 w-full overflow-y-scroll pr-2 custom-scrollbar bg-gray-50 rounded">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-2 grid-auto-rows-max">
                         {results.slice(0, 20).map((item: any, idx: number) => (
                           <div key={`${item.id || item.sku || idx}`} className="border border-gray-100 rounded p-3 hover:border-black transition-colors bg-white shadow-sm">
