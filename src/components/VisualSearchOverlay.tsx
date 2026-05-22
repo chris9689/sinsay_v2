@@ -261,8 +261,8 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
               </div>
 
               {/* Results Section */}
-              <div className="space-y-4 flex flex-col h-full min-h-0">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700">
+              <div className="flex flex-col h-full min-h-0">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700 mb-4">
                   Results {totalResults > 0 ? `(${totalResults})` : results.length > 0 ? `(${results.length})` : ''}
                 </h3>
 
@@ -286,8 +286,8 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div className="flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex-1 min-h-0 w-full overflow-y-scroll pr-2 custom-scrollbar bg-gray-50 rounded">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-2 grid-auto-rows-max">
                         {results.slice(0, 20).map((item: any, idx: number) => (
                           <div key={`${item.id || item.sku || idx}`} className="border border-gray-100 rounded p-3 hover:border-black transition-colors bg-white shadow-sm">
                             <div className="aspect-square overflow-hidden rounded mb-3 bg-gray-100">
