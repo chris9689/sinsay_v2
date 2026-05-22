@@ -142,7 +142,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
 
           {/* Content */}
           <div className="flex-1 overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 h-full">
               {/* Image Selection Section */}
               <div className="space-y-4">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700">
