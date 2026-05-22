@@ -7,6 +7,7 @@ export interface VisualSearchInput {
 
 export interface VisualSearchResult {
   results: any[];
+  totalResults: number;
   loading: boolean;
   error: string | null;
 }
@@ -42,6 +43,10 @@ export function useVisualSearch(input: VisualSearchInput | null) {
 
   return {
     results: data?.results || [],
+    totalResults:
+      typeof data?.totalResults === 'number'
+        ? data.totalResults
+        : data?.results?.length ?? 0,
     loading: isLoading,
     error: error ? error.message : null,
     refetch,

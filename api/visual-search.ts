@@ -73,9 +73,11 @@ export default async function handler(req: any, res: any) {
 
     const data = await response.json();
     const results = extractVisualSearchResults(data);
+    const totalResults = extractVisualSearchTotalResults(data);
 
     return res.status(200).json({
       results,
+      totalResults,
       rawResponse: data,
     });
   } catch (error) {
@@ -151,4 +153,21 @@ function extractVisualSearchResults(response: any): any[] {
     console.error('[Visual Search] Error extracting results:', error);
     return [];
   }
+}
+
+function extractVisualSearchTotalResults(response: any): number {
+  if (!response) {
+    return 0;
+  }
+
+  const firstResponse = response.response?.[0];
+  if (typeof firstResponse?.totalNumResults === 'number') {
+    return firstResponse.totalNumResults;
+  }
+
+  if (typeof response.totalNumResults === 'number') {
+    return response.totalNumResults;
+  }
+
+  return 0;
 }

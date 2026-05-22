@@ -21,7 +21,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
   const [isConverting, setIsConverting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { results, loading: isSearching, error: searchError } = useVisualSearch(searchPayload);
+  const { results, totalResults, loading: isSearching, error: searchError } = useVisualSearch(searchPayload);
 
   // Handle ESC key
   useEffect(() => {
@@ -141,7 +141,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-hidden">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
               {/* Image Selection Section */}
               <div className="space-y-4">
@@ -261,13 +261,13 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
               </div>
 
               {/* Results Section */}
-              <div className="space-y-4">
+              <div className="space-y-4 flex flex-col h-full min-h-0">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700">
-                  Results {results.length > 0 ? `(${results.length})` : ''}
+                  Results {totalResults > 0 ? `(${totalResults})` : results.length > 0 ? `(${results.length})` : ''}
                 </h3>
 
                 {isSearching ? (
-                  <div className="flex items-center justify-center h-96">
+                  <div className="flex-1 min-h-0 flex items-center justify-center">
                     <div className="text-center">
                       <div className="animate-spin text-4xl mb-4">⋯</div>
                       <p className="text-sm text-gray-500 uppercase tracking-wider font-medium">
@@ -277,7 +277,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                   </div>
                 ) : searchPayload ? (
                   results.length === 0 ? (
-                    <div className="flex items-center justify-center h-96">
+                    <div className="flex-1 min-h-0 flex items-center justify-center">
                       <div className="text-center">
                         <Camera size={32} className="text-gray-300 mx-auto mb-4" />
                         <p className="text-sm text-gray-500 uppercase tracking-wider font-medium">
@@ -286,7 +286,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div className="max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {results.slice(0, 20).map((item: any, idx: number) => (
                           <div key={`${item.id || item.sku || idx}`} className="border border-gray-100 rounded p-3 hover:border-black transition-colors bg-white shadow-sm">
