@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, SlidersHorizontal, ChevronDown, Heart, ShoppingBag, User, X, Camera } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronDown, Heart, ShoppingBag, User, X, Camera, MessageCircle } from 'lucide-react';
 import { useDYSearch } from './hooks/useDYSearch';
 import { useConfig } from './context/ConfigContext';
 import { extractDyPayload } from './utils/dyResponseAdapter';
 import { ProductCard } from './components/ProductCard';
 import { ConfigPanel } from './components/ConfigPanel';
 import { VisualSearchOverlay } from './components/VisualSearchOverlay';
+import { MuseChatOverlay } from './components/MuseChatOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import debounce from 'lodash/debounce';
 
@@ -20,6 +21,7 @@ export default function App() {
   const [logoError, setLogoError] = useState(false);
   const [showVisualSearch, setShowVisualSearch] = useState(false);
   const [productImageForSearch, setProductImageForSearch] = useState<string | undefined>();
+  const [showMuseChat, setShowMuseChat] = useState(false);
 
   // Debounce search input
   const updateSearch = useCallback(
@@ -84,33 +86,43 @@ export default function App() {
             <img src="/logo.png" alt="Sinsay" className="h-8 cursor-pointer select-none" onError={() => setLogoError(true)} />
           )}
 
-          <div className="flex-1 max-w-xl relative">
-            <input 
-              type="text"
-              value={searchTerm}
-              placeholder="Search for products..."
-              className="w-full bg-black/5 hover:bg-black/8 focus:bg-white border-transparent focus:border-black rounded-sm py-2.5 px-11 text-sm transition-all outline-none"
-              onChange={handleSearchChange}
-            />
-            <Search className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-black transition-colors" size={18} />
-            {searchTerm && (
-              <button 
-                onClick={() => { setSearchTerm(''); updateSearch(''); }}
-                className="absolute right-3.5 top-3 text-gray-400 hover:text-black"
+          <div className="flex-1 max-w-xl flex items-center gap-2">
+            <div className="relative flex-1">
+              <input 
+                type="text"
+                value={searchTerm}
+                placeholder="Search for products..."
+                className="w-full bg-black/5 hover:bg-black/8 focus:bg-white border-transparent focus:border-black rounded-sm py-2.5 px-11 text-sm transition-all outline-none"
+                onChange={handleSearchChange}
+              />
+              <Search className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-black transition-colors" size={18} />
+              {searchTerm && (
+                <button 
+                  onClick={() => { setSearchTerm(''); updateSearch(''); }}
+                  className="absolute right-3.5 top-3 text-gray-400 hover:text-black"
+                >
+                  <X size={18} />
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setProductImageForSearch(undefined);
+                  setShowVisualSearch(true);
+                }}
+                className="absolute right-12 top-3 text-gray-400 hover:text-black transition-colors"
+                title="Visual search"
+                aria-label="Visual search"
               >
-                <X size={18} />
+                <Camera size={18} />
               </button>
-            )}
+            </div>
             <button
-              onClick={() => {
-                setProductImageForSearch(undefined);
-                setShowVisualSearch(true);
-              }}
-              className="absolute right-12 top-3 text-gray-400 hover:text-black transition-colors"
-              title="Visual search"
-              aria-label="Visual search"
+              onClick={() => setShowMuseChat(true)}
+              className="h-10 px-3.5 border border-black text-black bg-white hover:bg-black hover:text-white transition-colors rounded-sm text-[11px] font-bold uppercase tracking-wider flex items-center gap-2 whitespace-nowrap"
+              aria-label="Ask Muse"
             >
-              <Camera size={18} />
+              <MessageCircle size={14} />
+              Ask Muse
             </button>
           </div>
 
@@ -364,6 +376,13 @@ export default function App() {
             productImageUrl={productImageForSearch}
             onClose={() => setShowVisualSearch(false)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Shopping Muse Overlay */}
+      <AnimatePresence>
+        {showMuseChat && (
+          <MuseChatOverlay onClose={() => setShowMuseChat(false)} />
         )}
       </AnimatePresence>
     </div>

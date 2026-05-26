@@ -15,6 +15,15 @@ View your app in AI Studio: https://ai.studio/apps/d08ba958-07e8-4855-8485-fece4
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. Set API keys in [.env.local](.env.local):
+   - `VISUALSEARCH_API_KEY=...`
+   - `SHOPPINGMUSE_API_KEY=...`
 3. Run the app:
    `npm run dev`
+
+## Vercel Environment Variables
+
+Add the same variables in your Vercel project settings:
+
+- `VISUALSEARCH_API_KEY`
+- `SHOPPINGMUSE_API_KEY`
