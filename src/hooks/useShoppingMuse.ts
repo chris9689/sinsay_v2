@@ -26,33 +26,12 @@ interface ShoppingMuseRequest {
   chatId?: string;
 }
 
-function getCookieValue(name: string): string | undefined {
-  if (typeof document === 'undefined') {
-    return undefined;
-  }
-
-  const prefix = `${name}=`;
-  const cookie = document.cookie
-    .split(';')
-    .map((entry) => entry.trim())
-    .find((entry) => entry.startsWith(prefix));
-
-  if (!cookie) {
-    return undefined;
-  }
-
-  return decodeURIComponent(cookie.slice(prefix.length));
-}
-
 export function useShoppingMuse() {
   const { config } = useConfig();
 
   return useMutation({
     mutationFn: async ({ text, chatId }: ShoppingMuseRequest): Promise<ShoppingMuseResponse> => {
       const locale = config.useLocale && config.locale ? config.locale : config.language;
-      const dyid = getCookieValue('_dyid') || config.uid;
-      const dyidServer = getCookieValue('_dyid_server') || dyid;
-      const sessionDy = getCookieValue('dy');
 
       const response = await fetch('/api/shopping-muse', {
         method: 'POST',
@@ -63,9 +42,6 @@ export function useShoppingMuse() {
           text,
           chatId,
           locale,
-          dyid,
-          dyidServer,
-          sessionDy,
           pageLocation: typeof window !== 'undefined' ? window.location.href : undefined,
           userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
         }),
@@ -73,8 +49,9 @@ export function useShoppingMuse() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        const details = typeof errorData.details === 'string' ? ` ${errorData.details}` : '';
         throw new Error(
-          errorData.error || errorData.message || `Shopping Muse failed: ${response.statusText}`
+          errorData.message || errorData.error || `Shopping Muse failed: ${response.statusText}${details}`
         );
       }
 

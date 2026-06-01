@@ -2,9 +2,6 @@ interface ShoppingMuseRequestBody {
   text?: string;
   chatId?: string;
   locale?: string;
-  dyid?: string;
-  dyidServer?: string;
-  sessionDy?: string;
   pageLocation?: string;
   userAgent?: string;
 }
@@ -44,11 +41,6 @@ export default async function handler(req: any, res: any) {
   const text = typeof body.text === 'string' ? body.text.trim() : '';
   const chatId = typeof body.chatId === 'string' ? body.chatId.trim() : '';
   const locale = typeof body.locale === 'string' && body.locale.trim() ? body.locale.trim() : 'en_US';
-  const dyid = typeof body.dyid === 'string' && body.dyid.trim() ? body.dyid.trim() : 'anonymous';
-  const dyidServer =
-    typeof body.dyidServer === 'string' && body.dyidServer.trim() ? body.dyidServer.trim() : dyid;
-  const sessionDy =
-    typeof body.sessionDy === 'string' && body.sessionDy.trim() ? body.sessionDy.trim() : undefined;
   const pageLocation =
     typeof body.pageLocation === 'string' && body.pageLocation.trim()
       ? body.pageLocation.trim()
@@ -73,13 +65,19 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'Shopping Muse API key not configured' });
   }
 
+  // Dummy values requested for Muse identity/session fields.
+  const dummyDyid = '123';
+  const dummySessionDy = 'ohyr6v42l9zd4bpinnvp7urjjx9lrssw';
+
   const payload: Record<string, unknown> = {
     user: {
       active_consent_accepted: true,
-      dyid,
-      dyid_server: dyidServer,
+      dyid: dummyDyid,
+      dyid_server: dummyDyid,
     },
-    session: sessionDy ? { dy: sessionDy } : {},
+    session: {
+      dy: dummySessionDy,
+    },
     query: {
       ...(chatId ? { chatId } : {}),
       text,
@@ -120,6 +118,7 @@ export default async function handler(req: any, res: any) {
       console.error('[Shopping Muse] API error:', response.status, details);
       return res.status(response.status).json({
         error: 'Shopping Muse request failed',
+        message: details || `Remote status ${response.status}`,
         details,
       });
     }
