@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Heart, ShoppingBag, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ScoreInfo } from './ScoreInfoIcon';
+import { useConfig } from '../context/ConfigContext';
 
 interface ProductCardProps {
   item: any;
@@ -10,6 +11,7 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ item, onVisualSearch }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const { config } = useConfig();
 
   if (!item) return null;
 
@@ -19,6 +21,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ item, onVisualSearch }
   const productUrl = item.url || item.product_url || '#';
   const brand = item.brand || 'Sinsay';
   const secondaryImageUrl = item.image_url_secondary || imageUrl;
+  const currency = (config.currency || 'PLN').toUpperCase();
 
   return (
     <motion.div 
@@ -110,11 +113,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ item, onVisualSearch }
         <div className="flex items-baseline gap-2">
           {item.discount_percentage ? (
             <>
-              <p className="text-[14px] font-bold text-sinsay-red">{price} PLN</p>
-              <p className="text-[11px] text-gray-400 line-through">{(price * 1.3).toFixed(2)} PLN</p>
+              <p className="text-[14px] font-bold text-sinsay-red">{price} {currency}</p>
+              <p className="text-[11px] text-gray-400 line-through">{(price * 1.3).toFixed(2)} {currency}</p>
             </>
           ) : (
-            <p className="text-[14px] font-bold">{price} PLN</p>
+            <p className="text-[14px] font-bold">{price} {currency}</p>
           )}
         </div>
       </div>

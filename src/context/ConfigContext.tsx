@@ -29,6 +29,9 @@ export interface DYConfig {
   uid: string;
   geoCode: string;
   geoRegionCode: string;
+  logoUrl: string;
+  currency: string;
+  categoryPath: string;
   mapping: {
     title: string[];
     image: string[];
@@ -67,6 +70,9 @@ const defaultConfig: DYConfig = {
   uid: '9190339902873124000',
   geoCode: 'US',
   geoRegionCode: 'US_VA',
+  logoUrl: '/logo.png',
+  currency: 'PLN',
+  categoryPath: 'Sinsay / Women / Search',
   mapping: {
     title: ['name', 'productName'],
     image: ['image_url', 'image_url_small', 'imageUrl'],

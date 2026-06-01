@@ -23,6 +23,11 @@ export default function App() {
   const [productImageForSearch, setProductImageForSearch] = useState<string | undefined>();
   const [showMuseChat, setShowMuseChat] = useState(false);
 
+  const breadcrumbParts = config.categoryPath
+    .split('/')
+    .map((part) => part.trim())
+    .filter(Boolean);
+
   // Debounce search input
   const updateSearch = useCallback(
     debounce((value: string) => {
@@ -47,6 +52,10 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    setLogoError(false);
+  }, [config.logoUrl]);
 
   const { data, isLoading } = useDYSearch(debouncedSearch, offset, selectedFilters);
   const { items, facets, totalNumResults } = extractDyPayload(data);
@@ -83,7 +92,7 @@ export default function App() {
               Sinsay
             </div>
           ) : (
-            <img src="/logo.png" alt="Sinsay" className="h-8 cursor-pointer select-none" onError={() => setLogoError(true)} />
+            <img src={config.logoUrl || '/logo.png'} alt="Sinsay" className="h-8 cursor-pointer select-none" onError={() => setLogoError(true)} />
           )}
 
           <div className="flex-1 max-w-xl flex items-center gap-2">
@@ -147,11 +156,18 @@ export default function App() {
         <div className="flex flex-col md:flex-row justify-between items-baseline gap-4 mb-10">
           <div>
             <nav className="flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-widest mb-3">
-              <span className="hover:text-black cursor-pointer">Sinsay</span>
-              <span>/</span>
-              <span className="hover:text-black cursor-pointer">Women</span>
-              <span>/</span>
-              <span className="text-black font-bold">Search</span>
+              {breadcrumbParts.length > 0 ? (
+                breadcrumbParts.map((part, idx) => (
+                  <React.Fragment key={`${part}-${idx}`}>
+                    <span className={idx === breadcrumbParts.length - 1 ? 'text-black font-bold' : 'hover:text-black cursor-pointer'}>
+                      {part}
+                    </span>
+                    {idx < breadcrumbParts.length - 1 ? <span>/</span> : null}
+                  </React.Fragment>
+                ))
+              ) : (
+                <span className="text-black font-bold">Search</span>
+              )}
             </nav>
             <h1 className="text-3xl font-light uppercase tracking-tight flex items-center gap-4">
               {debouncedSearch ? `Search Results: ${debouncedSearch}` : 'New Arrivals'}

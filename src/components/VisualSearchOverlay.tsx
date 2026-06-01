@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { imageToBase64 } from '../utils/imageToBase64';
 import { useVisualSearch, VisualSearchInput } from '../hooks/useVisualSearch';
 import { ScoreInfo } from './ScoreInfoIcon';
+import { useConfig } from '../context/ConfigContext';
 
 interface VisualSearchOverlayProps {
   productImageUrl?: string;
@@ -14,6 +15,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
   productImageUrl,
   onClose,
 }) => {
+  const { config } = useConfig();
   const [selectedImage, setSelectedImage] = useState<string | null>(productImageUrl || null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [useMode, setUseMode] = useState<'product' | 'upload'>(productImageUrl ? 'product' : 'upload');
@@ -21,9 +23,15 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
   const [conversionError, setConversionError] = useState<string | null>(null);
   const [isConverting, setIsConverting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const { results, totalResults, loading: isSearching, error: searchError } = useVisualSearch(searchPayload);
+  const currency = (config.currency || 'PLN').toUpperCase();
+
+  const widgetRows: any[][] = [];
+  const chunkSize = 8;
+  for (let i = 0; i < results.length; i += chunkSize) {
+    widgetRows.push(results.slice(i, i + chunkSize));
+  }
 
   // Handle ESC key
   useEffect(() => {
@@ -117,18 +125,17 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onMouseDown={onClose}
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-start md:items-center justify-center p-2 md:p-4 overflow-y-auto"
+        className="fixed inset-0 z-50 bg-black/35 backdrop-blur-sm"
       >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ duration: 0.3 }}
+        <motion.aside
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ type: 'spring', damping: 30, stiffness: 280 }}
           onMouseDown={(e) => e.stopPropagation()}
-          className="relative my-2 md:my-0 w-full max-w-6xl md:max-w-7xl max-h-[95vh] md:max-h-[90vh] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col"
+          className="absolute inset-y-0 right-0 w-full md:w-1/2 bg-white shadow-2xl border-l border-black/10 flex flex-col"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
             <div className="flex items-center gap-3">
               <Camera size={20} className="text-black" />
               <h2 className="text-lg font-bold uppercase tracking-wider">Visual Search</h2>
@@ -142,16 +149,13 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
             </button>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 p-4 md:p-6 h-auto lg:h-full lg:min-h-0">
-              {/* Image Selection Section */}
-              <div className="space-y-4 lg:col-span-2">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700">
+          <div className="flex-1 min-h-0 p-4 md:p-5 overflow-y-auto">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 min-h-full xl:min-h-0">
+              <div className="space-y-4 xl:col-span-1">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">
                   Select Image
                 </h3>
 
-                {/* Mode Toggle Buttons */}
                 <div className="flex gap-2">
                   {productImageUrl && (
                     <button
@@ -169,7 +173,6 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                     onClick={() => handleSwitchMode('upload')}
                     className={`flex-1 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all ${
                       useMode === 'upload'
-                        ? 'bg-black text-white'
                         : 'bg-gray-100 text-black hover:bg-gray-200'
                     }`}
                   >
@@ -192,7 +195,6 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                   </div>
                 ) : null}
 
-                {/* Upload Area (conditionally shown) */}
                 {useMode === 'upload' && !selectedImage && (
                   <div
                     onDragOver={handleDragOver}
@@ -208,7 +210,6 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                   </div>
                 )}
 
-                {/* Hidden file input */}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -218,7 +219,6 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                   aria-label="Upload image"
                 />
 
-                {/* Change Image Button (for upload mode) */}
                 {useMode === 'upload' && selectedImage && (
                   <button
                     onClick={() => fileInputRef.current?.click()}
@@ -228,7 +228,6 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                   </button>
                 )}
 
-                {/* Error Display */}
                 {conversionError && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 font-medium">
                     {conversionError}
@@ -241,7 +240,6 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                   </div>
                 )}
 
-                {/* Search Button */}
                 <button
                   onClick={runVisualSearch}
                   disabled={!canSearch}
@@ -262,14 +260,15 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                 </button>
               </div>
 
-              {/* Results Section */}
-              <div className="flex flex-col min-h-72 lg:h-full lg:min-h-0 lg:col-span-3 overflow-hidden">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700 mb-4">
+              <div className="flex flex-col min-h-72 xl:min-h-0 xl:col-span-2 rounded border border-gray-100 bg-[#fafafa]">
+                <div className="px-4 py-3 border-b border-gray-100 shrink-0">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700">
                   Results {totalResults > 0 ? `(${totalResults})` : results.length > 0 ? `(${results.length})` : ''}
-                </h3>
+                  </h3>
+                </div>
 
                 {isSearching ? (
-                  <div className="flex-1 min-h-0 flex items-center justify-center">
+                  <div className="flex-1 min-h-0 flex items-center justify-center p-4">
                     <div className="text-center">
                       <div className="animate-spin text-4xl mb-4">⋯</div>
                       <p className="text-sm text-gray-500 uppercase tracking-wider font-medium">
@@ -279,7 +278,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                   </div>
                 ) : searchPayload ? (
                   results.length === 0 ? (
-                    <div className="flex-1 min-h-0 flex items-center justify-center">
+                    <div className="flex-1 min-h-0 flex items-center justify-center p-4">
                       <div className="text-center">
                         <Camera size={32} className="text-gray-300 mx-auto mb-4" />
                         <p className="text-sm text-gray-500 uppercase tracking-wider font-medium">
@@ -288,55 +287,67 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div 
-                      ref={scrollContainerRef}
-                      className="flex-1 h-full min-h-0 w-full overflow-y-auto pr-2 custom-scrollbar bg-gray-50 rounded">
-                      <div className="space-y-2 p-2">
-                        {results.slice(0, 20).map((item: any, idx: number) => (
-                          <div key={`${item.id || item.sku || idx}`} className="relative border border-gray-100 rounded p-2 hover:border-black transition-colors bg-white shadow-sm group">
-                            {/* Score Info Icon */}
-                            <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                              <ScoreInfo item={item} />
-                            </div>
+                    <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 custom-scrollbar space-y-4">
+                      {widgetRows.map((row, rowIdx) => (
+                        <section key={`widget-row-${rowIdx}`} className="rounded border border-gray-200 bg-white p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-700">
+                              Recommendation Widget {rowIdx + 1}
+                            </p>
+                            <p className="text-[10px] text-gray-400 uppercase tracking-wider">{row.length} items</p>
+                          </div>
 
-                            <div className="flex items-center gap-3">
-                              <div className="h-20 w-20 shrink-0 overflow-hidden rounded bg-gray-100">
-                                <img
-                                  src={
-                                    item.image_url ||
-                                    item.image_url_small ||
-                                    item.imageUrl ||
-                                    item.productData?.image_url ||
-                                    item.productData?.imageUrl ||
-                                    'https://placehold.co/200x200?text=No+Image'
-                                  }
-                                  alt={item.name || item.productData?.name || 'Product'}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = 'https://placehold.co/200x200?text=No+Image';
-                                  }}
-                                />
-                              </div>
+                          <div className="overflow-x-auto custom-scrollbar pb-2">
+                            <div className="flex gap-3 min-w-max">
+                              {row.map((item: any, idx: number) => (
+                                <article
+                                  key={`${item.id || item.sku || idx}`}
+                                  className="relative w-40 border border-gray-100 rounded bg-white shadow-sm hover:shadow transition-shadow"
+                                >
+                                  <div className="absolute top-2 left-2 z-10">
+                                    <ScoreInfo item={item} />
+                                  </div>
 
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-bold line-clamp-2 mb-1">
-                                  {item.name || item.productData?.name || 'Unknown'}
-                                </p>
-                                <p className="text-sm font-bold text-sinsay-red">
-                                  {item.price || item.dy_display_price || item.productData?.dy_display_price || 'N/A'} PLN
-                                </p>
-                                <p className="text-[11px] text-gray-400 truncate mt-1">
-                                  SKU: {item.sku || item.productData?.sku || item.id || 'N/A'}
-                                </p>
-                              </div>
+                                  <div className="aspect-square overflow-hidden rounded-t bg-gray-100">
+                                    <img
+                                      src={
+                                        item.image_url ||
+                                        item.image_url_small ||
+                                        item.imageUrl ||
+                                        item.productData?.image_url ||
+                                        item.productData?.imageUrl ||
+                                        'https://placehold.co/200x200?text=No+Image'
+                                      }
+                                      alt={item.name || item.productData?.name || 'Product'}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).src = 'https://placehold.co/200x200?text=No+Image';
+                                      }}
+                                    />
+                                  </div>
+
+                                  <div className="p-2">
+                                    <p className="text-[11px] font-bold line-clamp-2 h-8">
+                                      {item.name || item.productData?.name || 'Unknown'}
+                                    </p>
+                                    <p className="text-xs font-bold text-sinsay-red mt-1">
+                                      {item.price || item.dy_display_price || item.productData?.dy_display_price || 'N/A'} {currency}
+                                    </p>
+                                    <p className="text-[10px] text-gray-400 truncate mt-1">
+                                      SKU: {item.sku || item.productData?.sku || item.id || 'N/A'}
+                                    </p>
+                                  </div>
+                                </article>
+                              ))}
                             </div>
                           </div>
-                        ))}
+                        </section>
+                      ))}
                       </div>
                     </div>
                   )
                 ) : (
-                  <div className="flex items-center justify-center h-96">
+                  <div className="flex-1 min-h-0 flex items-center justify-center p-4">
                     <div className="text-center text-gray-500">
                       <Camera size={32} className="mx-auto mb-4" />
                       <p className="text-sm uppercase tracking-wider font-medium">
@@ -348,7 +359,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
               </div>
             </div>
           </div>
-        </motion.div>
+        </motion.aside>
       </motion.div>
     </AnimatePresence>
   );

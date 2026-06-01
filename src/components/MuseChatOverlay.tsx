@@ -116,15 +116,15 @@ export const MuseChatOverlay: React.FC<MuseChatOverlayProps> = ({ onClose }) => 
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onMouseDown={onClose}
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+        className="fixed inset-0 z-50 bg-black/35 backdrop-blur-sm"
       >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.97, y: 10 }}
-          transition={{ duration: 0.2 }}
+        <motion.aside
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ type: 'spring', damping: 30, stiffness: 280 }}
           onMouseDown={(e) => e.stopPropagation()}
-          className="w-full max-w-2xl h-[80vh] max-h-[760px] bg-white rounded-lg shadow-2xl border border-black/5 flex flex-col"
+          className="absolute inset-y-0 right-0 w-full md:w-1/2 bg-white shadow-2xl border-l border-black/10 flex flex-col"
         >
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -136,7 +136,7 @@ export const MuseChatOverlay: React.FC<MuseChatOverlayProps> = ({ onClose }) => 
             </button>
           </div>
 
-          <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-[#fcfcfc]">
+          <div ref={listRef} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-[#fcfcfc]">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
@@ -152,20 +152,42 @@ export const MuseChatOverlay: React.FC<MuseChatOverlayProps> = ({ onClose }) => 
                   ) : null}
 
                   {msg.widgets && msg.widgets.length > 0 ? (
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-3 space-y-3">
                       {msg.widgets.map((widget, widgetIdx) => (
                         <div key={`${msg.id}-widget-${widgetIdx}`} className="rounded border border-gray-100 p-2 bg-[#fafafa]">
                           <p className="text-[11px] font-bold uppercase tracking-wider text-gray-600">
                             {widget.title || 'Recommendations'}
                           </p>
-                          <ul className="mt-2 space-y-1 text-xs text-gray-700">
-                            {(widget.slots || []).slice(0, 5).map((slot, slotIdx) => (
-                              <li key={`${slot.slotId || slot.sku || slotIdx}`} className="flex justify-between gap-3">
-                                <span className="truncate">{getSlotDisplayName(slot)}</span>
-                                <span className="text-gray-400">{slot.sku || 'N/A'}</span>
-                              </li>
-                            ))}
-                          </ul>
+                          <div className="mt-2 overflow-x-auto custom-scrollbar pb-2">
+                            <div className="flex gap-2 min-w-max">
+                              {(widget.slots || []).slice(0, 12).map((slot, slotIdx) => {
+                                const image =
+                                  (slot.productData?.image_url as string) ||
+                                  (slot.productData?.imageUrl as string) ||
+                                  (slot.productData?.image_url_small as string) ||
+                                  'https://placehold.co/160x160?text=No+Image';
+
+                                return (
+                                  <article key={`${slot.slotId || slot.sku || slotIdx}`} className="w-36 rounded border border-gray-200 bg-white">
+                                    <div className="aspect-square overflow-hidden rounded-t bg-gray-100">
+                                      <img
+                                        src={image}
+                                        alt={getSlotDisplayName(slot)}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).src = 'https://placehold.co/160x160?text=No+Image';
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="p-2">
+                                      <p className="text-[11px] font-medium line-clamp-2 h-8">{getSlotDisplayName(slot)}</p>
+                                      <p className="text-[10px] text-gray-400 mt-1 truncate">{slot.sku || 'N/A'}</p>
+                                    </div>
+                                  </article>
+                                );
+                              })}
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -215,7 +237,7 @@ export const MuseChatOverlay: React.FC<MuseChatOverlayProps> = ({ onClose }) => 
             </div>
             {error ? <p className="mt-2 text-xs text-red-600">{error.message}</p> : null}
           </div>
-        </motion.div>
+        </motion.aside>
       </motion.div>
     </AnimatePresence>
   );

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useConfig, DYConfig } from '../context/ConfigContext';
-import { X, Terminal, Save, Database, RefreshCw, Globe, Cpu, Search, Layout, Codepen, Copy, Check } from 'lucide-react';
+import { X, Terminal, Save, Database, RefreshCw, Globe, Cpu, Search, Layout, Codepen, Copy, Check, ImagePlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
@@ -29,6 +29,24 @@ export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
 
   const updateField = (field: keyof DYConfig, value: any) => {
     setLocalConfig(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleLogoUpload = (file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        updateField('logoUrl', reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -144,6 +162,32 @@ export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
                 <ConfigField label="Geo Code" value={localConfig.geoCode} onChange={(v: string) => updateField('geoCode', v)} />
                 <ConfigField label="Geo Region" value={localConfig.geoRegionCode} onChange={(v: string) => updateField('geoRegionCode', v)} />
                 <ConfigField label="Visitor ID (uid)" value={localConfig.uid} onChange={(v: string) => updateField('uid', v)} className="col-span-2" />
+                <ConfigField label="Currency" value={localConfig.currency} onChange={(v: string) => updateField('currency', v.toUpperCase())} />
+                <div className="col-span-2">
+                  <ConfigField
+                    label="Category Path"
+                    value={localConfig.categoryPath}
+                    onChange={(v: string) => updateField('categoryPath', v)}
+                    description="Format: Sinsay / Women / Search"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <ConfigField
+                    label="Logo URL"
+                    value={localConfig.logoUrl}
+                    onChange={(v: string) => updateField('logoUrl', v)}
+                    description="URL or data URI"
+                  />
+                  <label className="mt-2 inline-flex items-center gap-2 px-3 py-2 rounded border border-zinc-700 hover:border-zinc-500 text-zinc-300 cursor-pointer uppercase text-[9px] font-bold tracking-wider">
+                    <ImagePlus size={12} /> Upload Logo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleLogoUpload(e.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                </div>
               </div>
             </section>
 
