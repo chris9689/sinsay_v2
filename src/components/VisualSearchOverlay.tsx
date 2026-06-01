@@ -112,23 +112,6 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
     }
   };
 
-  const getItemCategory = (item: any): string => {
-    const category =
-      item?.category_path ||
-      item?.categoryPath ||
-      item?.category ||
-      item?.productData?.category_path ||
-      item?.productData?.categoryPath ||
-      item?.productData?.category ||
-      item?.productData?.department;
-
-    if (typeof category === 'string' && category.trim()) {
-      return category;
-    }
-
-    return 'Uncategorized';
-  };
-
   const scrollVisualSlider = (direction: 'left' | 'right') => {
     const node = visualSliderRef.current;
     if (!node) {
@@ -374,11 +357,8 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                                   <p className="text-xs font-bold line-clamp-2 h-9">
                                     {item.name || item.productData?.name || 'Unknown'}
                                   </p>
-                                  <p className="text-sm font-bold text-sinsay-red mt-1">
+                                  <p className="text-sm font-semibold text-black/60 mt-1">
                                     {item.price || item.dy_display_price || item.productData?.dy_display_price || 'N/A'} {currency}
-                                  </p>
-                                  <p className="text-[11px] text-gray-400 truncate mt-1">
-                                    {getItemCategory(item)}
                                   </p>
                                 </div>
                               </article>

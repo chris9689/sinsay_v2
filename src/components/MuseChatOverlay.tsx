@@ -234,7 +234,7 @@ export const MuseChatOverlay: React.FC<MuseChatOverlayProps> = ({ onClose }) => 
                                     </div>
                                     <div className="p-2">
                                       <p className="text-[11px] font-medium line-clamp-2 h-8">{getSlotDisplayName(slot)}</p>
-                                      <p className="text-[10px] text-sinsay-red font-bold mt-1 truncate">
+                                      <p className="text-[10px] text-black/60 font-semibold mt-1 truncate">
                                         {getSlotPrice(slot)} {currency}
                                       </p>
                                     </div>

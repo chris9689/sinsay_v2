@@ -95,7 +95,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ item, onVisualSearch }
                       onVisualSearch(selectedImageUrl);
                     }
                   }}
-                  className="w-full bg-white/20 text-white py-2 text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white/30 transition-colors border border-white/30"
+                  className="w-full bg-white/85 text-black py-2 text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white transition-colors border border-black/20"
                   title="Search with this product image"
                 >
                   <Camera size={14} /> Visual Search
