@@ -173,6 +173,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                     onClick={() => handleSwitchMode('upload')}
                     className={`flex-1 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all ${
                       useMode === 'upload'
+                        ? 'bg-black text-white'
                         : 'bg-gray-100 text-black hover:bg-gray-200'
                     }`}
                   >
@@ -343,7 +344,6 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                           </div>
                         </section>
                       ))}
-                      </div>
                     </div>
                   )
                 ) : (
