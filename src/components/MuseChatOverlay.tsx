@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { MessageCircle, Send, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageCircle, Send, X } from 'lucide-react';
 import { useShoppingMuse, ShoppingMuseWidget } from '../hooks/useShoppingMuse';
+import { useConfig } from '../context/ConfigContext';
 
 type ChatRole = 'user' | 'assistant';
 
@@ -25,10 +26,25 @@ function getSlotDisplayName(slot: { sku?: string; productData?: Record<string, u
       return value;
     }
   }
-  return slot.sku ?? 'Unnamed product';
+  return 'Unnamed product';
+}
+
+function getSlotPrice(slot: { productData?: Record<string, unknown> }): string {
+  const priceKeys = ['price', 'dy_display_price', 'displayPrice'];
+  for (const key of priceKeys) {
+    const value = slot.productData?.[key];
+    if (typeof value === 'number') {
+      return value.toFixed(2);
+    }
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+  }
+  return 'N/A';
 }
 
 export const MuseChatOverlay: React.FC<MuseChatOverlayProps> = ({ onClose }) => {
+  const { config } = useConfig();
   const [chatId, setChatId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -41,6 +57,8 @@ export const MuseChatOverlay: React.FC<MuseChatOverlayProps> = ({ onClose }) => 
 
   const { mutateAsync, isPending, error } = useShoppingMuse();
   const listRef = useRef<HTMLDivElement>(null);
+  const sliderRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const currency = (config.currency || 'PLN').toUpperCase();
 
   const canSend = useMemo(() => draft.trim().length > 0 && draft.trim().length <= 250 && !isPending, [draft, isPending]);
 
@@ -61,6 +79,16 @@ export const MuseChatOverlay: React.FC<MuseChatOverlayProps> = ({ onClose }) => 
     }
     listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [messages, isPending]);
+
+  const scrollSlider = (sliderId: string, direction: 'left' | 'right') => {
+    const node = sliderRefs.current[sliderId];
+    if (!node) {
+      return;
+    }
+
+    const shift = 280;
+    node.scrollBy({ left: direction === 'left' ? -shift : shift, behavior: 'smooth' });
+  };
 
   const sendMessage = async () => {
     const text = draft.trim();
@@ -155,10 +183,35 @@ export const MuseChatOverlay: React.FC<MuseChatOverlayProps> = ({ onClose }) => 
                     <div className="mt-3 space-y-3">
                       {msg.widgets.map((widget, widgetIdx) => (
                         <div key={`${msg.id}-widget-${widgetIdx}`} className="rounded border border-gray-100 p-2 bg-[#fafafa]">
-                          <p className="text-[11px] font-bold uppercase tracking-wider text-gray-600">
-                            {widget.title || 'Recommendations'}
-                          </p>
-                          <div className="mt-2 overflow-x-auto custom-scrollbar pb-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-600">
+                              {widget.title || 'Recommendations'}
+                            </p>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => scrollSlider(`${msg.id}-widget-${widgetIdx}`, 'left')}
+                                className="h-6 w-6 rounded border border-gray-200 bg-white flex items-center justify-center hover:border-black"
+                                aria-label="Slide left"
+                              >
+                                <ChevronLeft size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => scrollSlider(`${msg.id}-widget-${widgetIdx}`, 'right')}
+                                className="h-6 w-6 rounded border border-gray-200 bg-white flex items-center justify-center hover:border-black"
+                                aria-label="Slide right"
+                              >
+                                <ChevronRight size={14} />
+                              </button>
+                            </div>
+                          </div>
+                          <div
+                            ref={(el) => {
+                              sliderRefs.current[`${msg.id}-widget-${widgetIdx}`] = el;
+                            }}
+                            className="mt-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                          >
                             <div className="flex gap-2 min-w-max">
                               {(widget.slots || []).slice(0, 12).map((slot, slotIdx) => {
                                 const image =
@@ -181,7 +234,9 @@ export const MuseChatOverlay: React.FC<MuseChatOverlayProps> = ({ onClose }) => 
                                     </div>
                                     <div className="p-2">
                                       <p className="text-[11px] font-medium line-clamp-2 h-8">{getSlotDisplayName(slot)}</p>
-                                      <p className="text-[10px] text-gray-400 mt-1 truncate">{slot.sku || 'N/A'}</p>
+                                      <p className="text-[10px] text-sinsay-red font-bold mt-1 truncate">
+                                        {getSlotPrice(slot)} {currency}
+                                      </p>
                                     </div>
                                   </article>
                                 );

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Camera, Upload } from 'lucide-react';
+import { X, Camera, Upload, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { imageToBase64 } from '../utils/imageToBase64';
 import { useVisualSearch, VisualSearchInput } from '../hooks/useVisualSearch';
@@ -23,15 +23,12 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
   const [conversionError, setConversionError] = useState<string | null>(null);
   const [isConverting, setIsConverting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const visualSliderRef = useRef<HTMLDivElement>(null);
 
   const { results, totalResults, loading: isSearching, error: searchError } = useVisualSearch(searchPayload);
   const currency = (config.currency || 'PLN').toUpperCase();
 
-  const widgetRows: any[][] = [];
-  const chunkSize = 8;
-  for (let i = 0; i < results.length; i += chunkSize) {
-    widgetRows.push(results.slice(i, i + chunkSize));
-  }
+  const widgetItems = results.slice(0, 20);
 
   // Handle ESC key
   useEffect(() => {
@@ -113,6 +110,33 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
     } else {
       setSelectedImage(selectedFile ? URL.createObjectURL(selectedFile) : null);
     }
+  };
+
+  const getItemCategory = (item: any): string => {
+    const category =
+      item?.category_path ||
+      item?.categoryPath ||
+      item?.category ||
+      item?.productData?.category_path ||
+      item?.productData?.categoryPath ||
+      item?.productData?.category ||
+      item?.productData?.department;
+
+    if (typeof category === 'string' && category.trim()) {
+      return category;
+    }
+
+    return 'Uncategorized';
+  };
+
+  const scrollVisualSlider = (direction: 'left' | 'right') => {
+    const node = visualSliderRef.current;
+    if (!node) {
+      return;
+    }
+
+    const shift = 360;
+    node.scrollBy({ left: direction === 'left' ? -shift : shift, behavior: 'smooth' });
   };
 
   const currentDisplayImage = useMode === 'product' ? productImageUrl : selectedImage;
@@ -289,61 +313,79 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                     </div>
                   ) : (
                     <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 custom-scrollbar space-y-4">
-                      {widgetRows.map((row, rowIdx) => (
-                        <section key={`widget-row-${rowIdx}`} className="rounded border border-gray-200 bg-white p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-700">
-                              Recommendation Widget {rowIdx + 1}
-                            </p>
-                            <p className="text-[10px] text-gray-400 uppercase tracking-wider">{row.length} items</p>
+                      <section className="rounded border border-gray-200 bg-white p-3">
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <p className="text-[11px] font-bold uppercase tracking-widest text-gray-700">
+                            Recommended similar products
+                          </p>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => scrollVisualSlider('left')}
+                              className="h-6 w-6 rounded border border-gray-200 bg-white flex items-center justify-center hover:border-black"
+                              aria-label="Slide left"
+                            >
+                              <ChevronLeft size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => scrollVisualSlider('right')}
+                              className="h-6 w-6 rounded border border-gray-200 bg-white flex items-center justify-center hover:border-black"
+                              aria-label="Slide right"
+                            >
+                              <ChevronRight size={14} />
+                            </button>
                           </div>
+                        </div>
 
-                          <div className="overflow-x-auto custom-scrollbar pb-2">
-                            <div className="flex gap-3 min-w-max">
-                              {row.map((item: any, idx: number) => (
-                                <article
-                                  key={`${item.id || item.sku || idx}`}
-                                  className="relative w-40 border border-gray-100 rounded bg-white shadow-sm hover:shadow transition-shadow"
-                                >
-                                  <div className="absolute top-2 left-2 z-10">
-                                    <ScoreInfo item={item} />
-                                  </div>
+                        <div
+                          ref={visualSliderRef}
+                          className="overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                        >
+                          <div className="flex gap-3 min-w-max">
+                            {widgetItems.map((item: any, idx: number) => (
+                              <article
+                                key={`${item.id || item.sku || idx}`}
+                                className="relative w-52 border border-gray-100 rounded bg-white shadow-sm hover:shadow transition-shadow"
+                              >
+                                <div className="absolute top-2 left-2 z-10">
+                                  <ScoreInfo item={item} />
+                                </div>
 
-                                  <div className="aspect-square overflow-hidden rounded-t bg-gray-100">
-                                    <img
-                                      src={
-                                        item.image_url ||
-                                        item.image_url_small ||
-                                        item.imageUrl ||
-                                        item.productData?.image_url ||
-                                        item.productData?.imageUrl ||
-                                        'https://placehold.co/200x200?text=No+Image'
-                                      }
-                                      alt={item.name || item.productData?.name || 'Product'}
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        (e.target as HTMLImageElement).src = 'https://placehold.co/200x200?text=No+Image';
-                                      }}
-                                    />
-                                  </div>
+                                <div className="aspect-4/5 overflow-hidden rounded-t bg-gray-100">
+                                  <img
+                                    src={
+                                      item.image_url ||
+                                      item.image_url_small ||
+                                      item.imageUrl ||
+                                      item.productData?.image_url ||
+                                      item.productData?.imageUrl ||
+                                      'https://placehold.co/280x360?text=No+Image'
+                                    }
+                                    alt={item.name || item.productData?.name || 'Product'}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = 'https://placehold.co/280x360?text=No+Image';
+                                    }}
+                                  />
+                                </div>
 
-                                  <div className="p-2">
-                                    <p className="text-[11px] font-bold line-clamp-2 h-8">
-                                      {item.name || item.productData?.name || 'Unknown'}
-                                    </p>
-                                    <p className="text-xs font-bold text-sinsay-red mt-1">
-                                      {item.price || item.dy_display_price || item.productData?.dy_display_price || 'N/A'} {currency}
-                                    </p>
-                                    <p className="text-[10px] text-gray-400 truncate mt-1">
-                                      SKU: {item.sku || item.productData?.sku || item.id || 'N/A'}
-                                    </p>
-                                  </div>
-                                </article>
-                              ))}
-                            </div>
+                                <div className="p-3">
+                                  <p className="text-xs font-bold line-clamp-2 h-9">
+                                    {item.name || item.productData?.name || 'Unknown'}
+                                  </p>
+                                  <p className="text-sm font-bold text-sinsay-red mt-1">
+                                    {item.price || item.dy_display_price || item.productData?.dy_display_price || 'N/A'} {currency}
+                                  </p>
+                                  <p className="text-[11px] text-gray-400 truncate mt-1">
+                                    {getItemCategory(item)}
+                                  </p>
+                                </div>
+                              </article>
+                            ))}
                           </div>
-                        </section>
-                      ))}
+                        </div>
+                      </section>
                     </div>
                   )
                 ) : (
