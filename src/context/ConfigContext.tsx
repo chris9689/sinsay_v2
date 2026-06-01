@@ -1,5 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+export type BoostMatchType = 'IS' | 'CONTAINS' | 'IS_NOT';
+
+export interface DynamicBoostingFactor {
+  field: string;
+  value: string;
+  matchType: BoostMatchType;
+  weight: number;
+}
+
 export interface DYConfig {
   sectionId: string;
   feedId: string;
@@ -32,6 +41,11 @@ export interface DYConfig {
   logoUrl: string;
   currency: string;
   categoryPath: string;
+  useDynamicBoosting: boolean;
+  dynamicBoostingFactors: DynamicBoostingFactor[];
+  useAffinityBoosting: boolean;
+  affinityBoostWeight: number;
+  affinityProfileJson: string;
   mapping: {
     title: string[];
     image: string[];
@@ -73,6 +87,18 @@ const defaultConfig: DYConfig = {
   logoUrl: '/logo.png',
   currency: 'PLN',
   categoryPath: 'Sinsay / Women / Search',
+  useDynamicBoosting: false,
+  dynamicBoostingFactors: [
+    {
+      field: 'categories',
+      value: 'long sleeve dresses',
+      matchType: 'IS',
+      weight: 50,
+    },
+  ],
+  useAffinityBoosting: false,
+  affinityBoostWeight: 80,
+  affinityProfileJson: '{\n  "categories": {\n    "Men": 100\n  }\n}',
   mapping: {
     title: ['name', 'productName'],
     image: ['image_url', 'image_url_small', 'imageUrl'],
@@ -97,7 +123,18 @@ export const ConfigProvider = ({ children }: { children: React.ReactNode }) => {
       const parsed = saved ? JSON.parse(saved) : defaultConfig;
       // Remove deprecated endpoint and ensure region
       const { endpoint, ...cleanConfig } = parsed;
-      return { ...cleanConfig, region: cleanConfig.region || 'US' };
+      return {
+        ...defaultConfig,
+        ...cleanConfig,
+        region: cleanConfig.region || 'US',
+        mapping: {
+          ...defaultConfig.mapping,
+          ...(cleanConfig.mapping || {}),
+        },
+        dynamicBoostingFactors: Array.isArray(cleanConfig.dynamicBoostingFactors)
+          ? cleanConfig.dynamicBoostingFactors
+          : defaultConfig.dynamicBoostingFactors,
+      };
     } catch (e) {
       return defaultConfig;
     }

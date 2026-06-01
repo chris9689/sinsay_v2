@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useConfig, DYConfig } from '../context/ConfigContext';
-import { X, Terminal, Save, Database, RefreshCw, Globe, Cpu, Search, Layout, Codepen, Copy, Check, ImagePlus } from 'lucide-react';
+import { useConfig, DYConfig, DynamicBoostingFactor } from '../context/ConfigContext';
+import { X, Terminal, Save, Database, RefreshCw, Globe, Cpu, Search, Layout, Codepen, Copy, Check, ImagePlus, ChevronDown, Plus, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
@@ -8,6 +8,8 @@ export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
   const [localConfig, setLocalConfig] = useState<DYConfig>(config);
   const [activeTab, setActiveTab] = useState<'config' | 'debug'>('config');
   const [copied, setCopied] = useState(false);
+  const [showDynamicBoosting, setShowDynamicBoosting] = useState(false);
+  const [showAffinityBoosting, setShowAffinityBoosting] = useState(false);
 
   const handleSave = () => {
     setConfig(localConfig);
@@ -29,6 +31,45 @@ export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
 
   const updateField = (field: keyof DYConfig, value: any) => {
     setLocalConfig(prev => ({ ...prev, [field]: value }));
+  };
+
+  const addDynamicBoostingFactor = () => {
+    const next: DynamicBoostingFactor[] = [
+      ...(localConfig.dynamicBoostingFactors || []),
+      {
+        field: '',
+        value: '',
+        matchType: 'IS',
+        weight: 0,
+      },
+    ];
+    updateField('dynamicBoostingFactors', next);
+  };
+
+  const removeDynamicBoostingFactor = (idx: number) => {
+    const next = (localConfig.dynamicBoostingFactors || []).filter((_, factorIdx) => factorIdx !== idx);
+    updateField('dynamicBoostingFactors', next);
+  };
+
+  const updateDynamicBoostingFactor = (
+    idx: number,
+    field: keyof DynamicBoostingFactor,
+    value: string | number
+  ) => {
+    const next = (localConfig.dynamicBoostingFactors || []).map((factor, factorIdx) => {
+      if (factorIdx !== idx) {
+        return factor;
+      }
+
+      if (field === 'weight') {
+        const numeric = typeof value === 'number' ? value : Number(value);
+        return { ...factor, weight: Math.max(-100, Math.min(100, Number.isNaN(numeric) ? 0 : numeric)) };
+      }
+
+      return { ...factor, [field]: value };
+    });
+
+    updateField('dynamicBoostingFactors', next);
   };
 
   const handleLogoUpload = (file: File | null) => {
@@ -210,6 +251,134 @@ export const ConfigPanel = ({ onClose }: { onClose: () => void }) => {
                   value={localConfig.mapping.price.join(', ')} 
                   onChange={(v: string) => setLocalConfig({...localConfig, mapping: {...localConfig.mapping, price: v.split(',').map((s: string) => s.trim())}})} 
                 />
+              </div>
+            </section>
+
+            <section>
+              <SectionHeader icon={<Search size={14}/>} title="Priority Boosting" />
+              <div className="space-y-4">
+                <div className="rounded border border-zinc-800 bg-black/20">
+                  <button
+                    type="button"
+                    onClick={() => setShowDynamicBoosting((prev) => !prev)}
+                    className="w-full px-3 py-2 flex items-center justify-between text-left"
+                  >
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-300">Dynamic Attribute Boosting</span>
+                    <ChevronDown size={14} className={`transition-transform ${showDynamicBoosting ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showDynamicBoosting ? (
+                    <div className="px-3 pb-3 space-y-3 border-t border-zinc-800">
+                      <div className="pt-3 flex items-center justify-between gap-2">
+                        <Toggle
+                          label="Enable Dynamic Boosting"
+                          checked={localConfig.useDynamicBoosting}
+                          onChange={(v: boolean) => updateField('useDynamicBoosting', v)}
+                        />
+                        <button
+                          type="button"
+                          onClick={addDynamicBoostingFactor}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded border border-zinc-700 hover:border-zinc-500 text-[9px] uppercase font-bold"
+                        >
+                          <Plus size={12} /> Add Filter
+                        </button>
+                      </div>
+
+                      <p
+                        className="text-[9px] text-zinc-500"
+                        title="Boosts products where a specific attribute matches a value. matchType options: IS (exact match), CONTAINS (substring), IS_NOT (exclusion). weight range: -100-100. Higher = stronger boost."
+                      >
+                        Boosts products where a specific attribute matches a value.
+                      </p>
+
+                      {(localConfig.dynamicBoostingFactors || []).map((factor, idx) => (
+                        <div key={`dynamic-factor-${idx}`} className="rounded border border-zinc-800 p-2 space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            <ConfigField
+                              label="Field"
+                              value={factor.field}
+                              onChange={(v: string) => updateDynamicBoostingFactor(idx, 'field', v)}
+                            />
+                            <ConfigField
+                              label="Value"
+                              value={factor.value}
+                              onChange={(v: string) => updateDynamicBoostingFactor(idx, 'value', v)}
+                            />
+                            <div>
+                              <div className="flex justify-between mb-1.5 px-0.5">
+                                <label className="text-zinc-400 font-bold uppercase tracking-tighter text-[9px]">Match Type</label>
+                              </div>
+                              <select
+                                value={factor.matchType}
+                                onChange={(e) => updateDynamicBoostingFactor(idx, 'matchType', e.target.value)}
+                                className="w-full bg-zinc-900 border border-zinc-800 px-3 py-2.5 rounded text-zinc-100 focus:border-green-500/50 focus:bg-zinc-800/50 outline-none transition-all"
+                              >
+                                <option value="IS">IS</option>
+                                <option value="CONTAINS">CONTAINS</option>
+                                <option value="IS_NOT">IS_NOT</option>
+                              </select>
+                            </div>
+                            <ConfigField
+                              label="Weight (-100 to 100)"
+                              type="number"
+                              value={factor.weight}
+                              onChange={(v: string) => updateDynamicBoostingFactor(idx, 'weight', Number(v))}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeDynamicBoostingFactor(idx)}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded border border-zinc-700 hover:border-red-500 text-[9px] uppercase font-bold text-zinc-400 hover:text-red-400"
+                          >
+                            <Trash2 size={12} /> Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="rounded border border-zinc-800 bg-black/20">
+                  <button
+                    type="button"
+                    onClick={() => setShowAffinityBoosting((prev) => !prev)}
+                    className="w-full px-3 py-2 flex items-center justify-between text-left"
+                  >
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-300">Affinity Boosting</span>
+                    <ChevronDown size={14} className={`transition-transform ${showAffinityBoosting ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showAffinityBoosting ? (
+                    <div className="px-3 pb-3 space-y-3 border-t border-zinc-800">
+                      <div className="pt-3">
+                        <Toggle
+                          label="Enable Affinity Boosting"
+                          checked={localConfig.useAffinityBoosting}
+                          onChange={(v: boolean) => updateField('useAffinityBoosting', v)}
+                        />
+                      </div>
+
+                      <ConfigField
+                        label="Affinity Weight (-100 to 100)"
+                        type="number"
+                        value={localConfig.affinityBoostWeight}
+                        onChange={(v: string) => updateField('affinityBoostWeight', Math.max(-100, Math.min(100, Number(v) || 0)))}
+                      />
+
+                      <div>
+                        <div className="flex justify-between mb-1.5 px-0.5">
+                          <label className="text-zinc-400 font-bold uppercase tracking-tighter text-[9px]">Affinity Profile JSON</label>
+                        </div>
+                        <textarea
+                          value={localConfig.affinityProfileJson}
+                          onChange={(e) => updateField('affinityProfileJson', e.target.value)}
+                          rows={8}
+                          className="w-full bg-zinc-900 border border-zinc-800 px-3 py-2.5 rounded text-zinc-100 focus:border-green-500/50 focus:bg-zinc-800/50 outline-none transition-all placeholder:text-zinc-700 resize-y"
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </section>
 

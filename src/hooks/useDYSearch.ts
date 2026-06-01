@@ -33,6 +33,61 @@ export const useDYSearch = (query: string, offset: number, filters: any[] = []) 
 
       const fId = isNaN(Number(config.feedId)) ? config.feedId : Number(config.feedId);
 
+      const clampWeight = (value: number) => Math.max(-100, Math.min(100, value));
+
+      const dynamicPriorityFactors = config.useDynamicBoosting
+        ? (config.dynamicBoostingFactors || [])
+            .filter((factor) => factor.field?.trim() && factor.value?.trim())
+            .map((factor, idx) => ({
+              name: `filter_${idx}`,
+              rule: {
+                contextTrigger: null,
+                name: `filter_${idx}`,
+                productsFilter: {
+                  items: [],
+                  query: {
+                    conditions: [
+                      {
+                        arguments: [
+                          {
+                            action: factor.matchType,
+                            value: factor.value,
+                          },
+                        ],
+                        field: factor.field,
+                      },
+                    ],
+                  },
+                  type: 'dynamic',
+                },
+              },
+              weight: clampWeight(Number(factor.weight) || 0),
+            }))
+        : [];
+
+      const affinityPriorityFactors = config.useAffinityBoosting
+        ? [
+            {
+              name: 'USER_AFFINITIES_V2',
+              weight: clampWeight(Number(config.affinityBoostWeight) || 0),
+            },
+          ]
+        : [];
+
+      let affinityProfile: Record<string, unknown> = {};
+      if (config.useAffinityBoosting && config.affinityProfileJson.trim()) {
+        try {
+          const parsed = JSON.parse(config.affinityProfileJson);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            affinityProfile = parsed;
+          }
+        } catch (error) {
+          console.warn('Invalid affinity profile JSON. Using empty affinity profile.');
+        }
+      }
+
+      const priorityFactors = [...dynamicPriorityFactors, ...affinityPriorityFactors];
+
       // Build search object with optional parameters
       const searchObj: any = {
         text: query || "*",
@@ -49,8 +104,8 @@ export const useDYSearch = (query: string, offset: number, filters: any[] = []) 
         text_knn_threshold: config.textKnnThreshold,
         k: config.k,
         num_candidates: config.numCandidates,
-        priorityFactors: [],
-        affinityProfile: {},
+        priorityFactors,
+        affinityProfile,
       };
 
       // Conditionally add optional parameters
