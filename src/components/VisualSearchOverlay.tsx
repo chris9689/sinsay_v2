@@ -134,7 +134,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onMouseDown={onClose}
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-start md:items-center justify-center p-2 md:p-4 overflow-y-auto"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -142,7 +142,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.3 }}
           onMouseDown={(e) => e.stopPropagation()}
-          className="relative w-full max-w-6xl md:max-w-7xl max-h-[90vh] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col"
+          className="relative my-2 md:my-0 w-full max-w-6xl md:max-w-7xl max-h-[95vh] md:max-h-[90vh] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
@@ -160,8 +160,8 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 h-full">
+          <div className="flex-1 overflow-y-auto md:overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 p-4 md:p-6 h-auto lg:h-full">
               {/* Image Selection Section */}
               <div className="space-y-4">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700">
@@ -280,7 +280,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
               </div>
 
               {/* Results Section */}
-              <div className="flex flex-col h-full min-h-0">
+              <div className="flex flex-col min-h-72 lg:h-full lg:min-h-0">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700 mb-4">
                   Results {totalResults > 0 ? `(${totalResults})` : results.length > 0 ? `(${results.length})` : ''}
                 </h3>
@@ -308,7 +308,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                     <div 
                       ref={scrollContainerRef}
                       onWheel={handleScrollContainerWheel}
-                      className="flex-1 min-h-0 w-full overflow-y-scroll pr-2 custom-scrollbar bg-gray-50 rounded">
+                      className="flex-1 min-h-0 max-h-[50vh] lg:max-h-none w-full overflow-y-auto pr-2 custom-scrollbar bg-gray-50 rounded">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-2 grid-auto-rows-max">
                         {results.slice(0, 20).map((item: any, idx: number) => (
                           <div key={`${item.id || item.sku || idx}`} className="relative border border-gray-100 rounded p-3 hover:border-black transition-colors bg-white shadow-sm group">

@@ -1,6 +1,12 @@
 interface ShoppingMuseRequestBody {
   text?: string;
   chatId?: string;
+  locale?: string;
+  dyid?: string;
+  dyidServer?: string;
+  sessionDy?: string;
+  pageLocation?: string;
+  userAgent?: string;
 }
 
 interface ShoppingMuseApiResponse {
@@ -37,6 +43,21 @@ export default async function handler(req: any, res: any) {
   const body = (req.body ?? {}) as ShoppingMuseRequestBody;
   const text = typeof body.text === 'string' ? body.text.trim() : '';
   const chatId = typeof body.chatId === 'string' ? body.chatId.trim() : '';
+  const locale = typeof body.locale === 'string' && body.locale.trim() ? body.locale.trim() : 'en_US';
+  const dyid = typeof body.dyid === 'string' && body.dyid.trim() ? body.dyid.trim() : 'anonymous';
+  const dyidServer =
+    typeof body.dyidServer === 'string' && body.dyidServer.trim() ? body.dyidServer.trim() : dyid;
+  const sessionDy =
+    typeof body.sessionDy === 'string' && body.sessionDy.trim() ? body.sessionDy.trim() : undefined;
+  const pageLocation =
+    typeof body.pageLocation === 'string' && body.pageLocation.trim()
+      ? body.pageLocation.trim()
+      : 'https://www.mypage.com';
+  const userAgent =
+    typeof body.userAgent === 'string' && body.userAgent.trim()
+      ? body.userAgent.trim()
+      : 'Mozilla/5.0';
+  const deviceType = /Mobi|Android|iPhone|iPad|iPod/i.test(userAgent) ? 'MOBILE' : 'DESKTOP';
 
   if (!text) {
     return res.status(400).json({ error: 'text is required' });
@@ -46,7 +67,7 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ error: 'text must be 250 characters or fewer' });
   }
 
-  const apiKey = process.env.SHOPPINGMUSE_API_KEY;
+  const apiKey = (globalThis as any).process?.env?.SHOPPINGMUSE_API_KEY as string | undefined;
   if (!apiKey) {
     console.error('[Shopping Muse] API key not configured');
     return res.status(500).json({ error: 'Shopping Muse API key not configured' });
@@ -54,29 +75,35 @@ export default async function handler(req: any, res: any) {
 
   const payload: Record<string, unknown> = {
     user: {
-      active_consent_accepted: false,
+      active_consent_accepted: true,
+      dyid,
+      dyid_server: dyidServer,
     },
-    session: {},
+    session: sessionDy ? { dy: sessionDy } : {},
+    query: {
+      ...(chatId ? { chatId } : {}),
+      text,
+    },
     context: {
       page: {
         type: 'HOMEPAGE',
-        location: 'https://www.mypage.com',
+        location: pageLocation,
+        locale,
+      },
+      device: {
+        userAgent,
+        type: deviceType,
       },
     },
     selector: {
-      names: ['Shopping Muse'],
-    },
-    query: {
-      text,
+      name: 'Shopping Muse',
     },
     options: {
       returnAnalyticsMetadata: false,
+      isImplicitClientData: false,
+      isImplicitKeywordSearchEvent: false,
     },
   };
-
-  if (chatId) {
-    (payload.query as Record<string, unknown>).chatId = chatId;
-  }
 
   try {
     const response = await fetch('https://dy-api.com/v2/serve/user/agent-assistant', {
