@@ -85,6 +85,7 @@ export default async function handler(req: any, res: any) {
     context: {
       page: {
         type: 'HOMEPAGE',
+        data: ['p12345'],
         location: pageLocation,
         locale,
       },

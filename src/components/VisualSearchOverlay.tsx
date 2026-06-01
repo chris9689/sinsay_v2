@@ -107,23 +107,6 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
     }
   };
 
-  const handleScrollContainerWheel = (e: React.WheelEvent) => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const { scrollTop, scrollHeight, clientHeight } = container;
-    const isAtTop = scrollTop === 0;
-    const isAtBottom = scrollTop + clientHeight >= scrollHeight;
-    const isScrollingDown = e.deltaY > 0;
-    const isScrollingUp = e.deltaY < 0;
-
-    // Prevent default if at boundary and trying to scroll further
-    if ((isAtTop && isScrollingUp) || (isAtBottom && isScrollingDown)) {
-      e.preventDefault();
-    }
-    e.stopPropagation();
-  };
-
   const currentDisplayImage = useMode === 'product' ? productImageUrl : selectedImage;
   const canSearch = currentDisplayImage && !isConverting && !isSearching;
 
@@ -160,8 +143,8 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto md:overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 p-4 md:p-6 h-auto lg:h-full">
+          <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 p-4 md:p-6 h-auto lg:h-full lg:min-h-0">
               {/* Image Selection Section */}
               <div className="space-y-4 lg:col-span-2">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700">
@@ -280,7 +263,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
               </div>
 
               {/* Results Section */}
-              <div className="flex flex-col min-h-72 lg:h-full lg:min-h-0 lg:col-span-3">
+              <div className="flex flex-col min-h-72 lg:h-full lg:min-h-0 lg:col-span-3 overflow-hidden">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700 mb-4">
                   Results {totalResults > 0 ? `(${totalResults})` : results.length > 0 ? `(${results.length})` : ''}
                 </h3>
@@ -307,8 +290,7 @@ export const VisualSearchOverlay: React.FC<VisualSearchOverlayProps> = ({
                   ) : (
                     <div 
                       ref={scrollContainerRef}
-                      onWheel={handleScrollContainerWheel}
-                      className="flex-1 min-h-0 max-h-[55vh] lg:max-h-none w-full overflow-y-auto pr-2 custom-scrollbar bg-gray-50 rounded">
+                      className="flex-1 h-full min-h-0 w-full overflow-y-auto pr-2 custom-scrollbar bg-gray-50 rounded">
                       <div className="space-y-2 p-2">
                         {results.slice(0, 20).map((item: any, idx: number) => (
                           <div key={`${item.id || item.sku || idx}`} className="relative border border-gray-100 rounded p-2 hover:border-black transition-colors bg-white shadow-sm group">
