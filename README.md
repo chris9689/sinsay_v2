@@ -1,29 +1,27 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Search Preview v2
 
-# Run and deploy your AI Studio app
+Demo storefront for Dynamic Yield search, Visual Search, and Shopping Muse.
 
-This contains everything you need to run your app locally.
+## Requirements
 
-View your app in AI Studio: https://ai.studio/apps/d08ba958-07e8-4855-8485-fece49ce886f
+- Node.js
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
+## Local Setup
 
 1. Install dependencies:
    `npm install`
-2. Set API keys in [.env.local](.env.local):
+2. Create `.env.local` with:
    - `VISUALSEARCH_API_KEY=...`
    - `SHOPPINGMUSE_API_KEY=...`
-3. Run the app:
+3. Start dev server:
    `npm run dev`
 
-## Vercel Environment Variables
+## Build
 
-Add the same variables in your Vercel project settings:
+- Production build:
+  `npm run build`
 
-- `VISUALSEARCH_API_KEY`
-- `SHOPPINGMUSE_API_KEY`
+## Notes
+
+- Search settings are configurable from the in-app config panel.
+- The same environment variables must be available in deployment.
