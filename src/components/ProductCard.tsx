@@ -19,7 +19,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ item, onVisualSearch }
   const price = item.price !== undefined ? item.price : (item.dy_display_price || '0.00');
   const imageUrl = item.image_url || item.image_url_small || item.imageUrl || '';
   const productUrl = item.url || item.product_url || '#';
-  const brand = item.brand || 'Sinsay';
+  const brand = typeof item.brand === 'string' ? item.brand.trim() : '';
   const secondaryImageUrl = item.image_url_secondary || imageUrl;
   const currency = (config.currency || 'PLN').toUpperCase();
 
@@ -108,7 +108,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ item, onVisualSearch }
 
       {/* Info Container */}
       <div className="mt-3 space-y-1">
-        <p className="text-[10px] text-gray-400 uppercase tracking-widest">{brand}</p>
+        {brand ? <p className="text-[10px] text-gray-400 uppercase tracking-widest">{brand}</p> : null}
         <h3 className="text-[13px] font-normal text-gray-800 line-clamp-1 leading-tight">{title}</h3>
         <div className="flex items-baseline gap-2">
           {item.discount_percentage ? (

@@ -56,9 +56,9 @@ export interface DYConfig {
 }
 
 const defaultConfig: DYConfig = {
-  sectionId: '8770123',
+  sectionId: '8787656',
   feedId: '85470',
-  widgetId: '12345',
+  widgetId: '464618',
   region: 'US',
   language: 'en_US',
   ctxType: 'HOMEPAGE',
@@ -85,8 +85,8 @@ const defaultConfig: DYConfig = {
   geoCode: 'US',
   geoRegionCode: 'US_VA',
   logoUrl: '/logo.png',
-  currency: 'PLN',
-  categoryPath: 'Sinsay / Women / Search',
+  currency: '$',
+  categoryPath: 'Blueberry / Search',
   useDynamicBoosting: false,
   dynamicBoostingFactors: [
     {
